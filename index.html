@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pecaña Dental Clinic System</title>
+
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<!-- =========================
+     PATIENT PORTAL
+========================= -->
+<div id="patient-portal">
+
+    <nav class="p-nav">
+        <div class="container">
+            <div class="p-brand">
+                PECAÑA<span>DENTAL</span>
+            </div>
+
+            <button class="staff-login-btn" onclick="toggleModal(true)">
+                Staff Login
+            </button>
+        </div>
+    </nav>
+
+    <section class="p-hero">
+        <h1>
+            Modern Dental Care for
+            <span>Polangui</span>
+        </h1>
+
+        <p>
+            Integrated Management System - Design Thinking Approach
+        </p>
+    </section>
+
+    <div class="booking-card">
+
+        <form id="p-booking-form">
+
+            <div class="form-row">
+
+                <input
+                    type="text"
+                    id="p-name"
+                    placeholder="Patient Full Name"
+                    required
+                >
+
+                <input
+                    type="tel"
+                    id="p-phone"
+                    placeholder="Contact Number"
+                    required
+                >
+
+            </div>
+
+            <div class="form-row">
+
+                <select id="p-service" required>
+
+                    <option value="">
+                        Select Treatment
+                    </option>
+
+                    <option>Cleaning</option>
+                    <option>Extraction</option>
+                    <option>Filling</option>
+                    <option>Root Canal</option>
+                    <option>Full-mouth Restoration</option>
+
+                </select>
+
+                <input
+                    type="date"
+                    id="p-date"
+                    required
+                >
+
+            </div>
+
+            <button
+                type="submit"
+                class="submit-btn"
+            >
+                Submit Appointment Request
+            </button>
+
+        </form>
+
+    </div>
+
+</div>
+
+
+<!-- =========================
+     LOGIN MODAL
+========================= -->
+<div id="login-modal" class="modal-overlay">
+
+    <div class="modal-card">
+
+        <h2>
+            Staff Login
+        </h2>
+
+        <form onsubmit="adminLogin(event)">
+
+            <div class="auth-group">
+
+                <i class="fas fa-user"></i>
+
+                <input
+                    type="text"
+                    id="adm-user"
+                    placeholder="User (admin)"
+                    required
+                >
+
+            </div>
+
+
+            <div class="auth-group">
+
+                <i class="fas fa-lock"></i>
+
+                <input
+                    type="password"
+                    id="adm-pass"
+                    placeholder="Pass (1234)"
+                    required
+                >
+
+            </div>
+
+
+            <button
+                type="submit"
+                class="login-action-btn"
+            >
+                Authorize Access
+            </button>
+
+            <p
+                id="auth-error"
+                class="error-msg"
+            >
+                Incorrect credentials.
+                Use admin / 1234.
+            </p>
+
+            <button
+                type="button"
+                onclick="toggleModal(false)"
+                class="cancel-btn"
+            >
+                Cancel
+            </button>
+
+        </form>
+
+    </div>
+
+</div>
+
+
+<!-- =========================
+     ADMIN DASHBOARD
+========================= -->
+<div id="admin-dashboard" class="hidden">
+
+    <aside class="sidebar">
+
+        <div class="sidebar-brand">
+            PECAÑA ADMIN
+        </div>
+
+        <ul class="side-nav">
+
+            <li
+                class="active"
+                onclick="switchAdminTab('monitoring', this)"
+            >
+                <i class="fas fa-chart-line"></i>
+                Monitoring
+            </li>
+
+            <li
+                onclick="switchAdminTab('appointments', this)"
+            >
+                <i class="fas fa-calendar-check"></i>
+                Appointments
+            </li>
+
+            <li
+                onclick="switchAdminTab('inventory', this)"
+            >
+                <i class="fas fa-boxes-stacked"></i>
+                Predictive Inventory
+            </li>
+
+            <li
+                onclick="switchAdminTab('bom', this)"
+            >
+                <i class="fas fa-list-check"></i>
+                Bill of Materials
+            </li>
+
+            <li onclick="logout()">
+                <i class="fas fa-right-from-bracket"></i>
+                Logout
+            </li>
+
+        </ul>
+
+    </aside>
+
+
+    <main class="content-area">
+
+        <div class="content-header">
+
+            <h1 id="tab-title">
+                Operational Monitoring
+            </h1>
+
+            <div class="small">
+                Demand-driven procurement
+            </div>
+
+        </div>
+
+
+        <!-- =========================
+             MONITORING
+        ========================= -->
+        <section
+            id="monitoring-tab"
+            class="admin-tab active"
+        >
+
+            <div class="stats-grid">
+
+                <div class="stat-card">
+
+                    <h3>
+                        Total Appointments
+                    </h3>
+
+                    <p id="stat-total">
+                        0
+                    </p>
+
+                </div>
+
+
+                <div class="stat-card">
+
+                    <h3>
+                        Pending
+                    </h3>
+
+                    <p id="stat-pending">
+                        0
+                    </p>
+
+                </div>
+
+
+                <div class="stat-card">
+
+                    <h3>
+                        Low-stock Forecasts
+                    </h3>
+
+                    <p id="stat-low">
+                        0
+                    </p>
+
+                </div>
+
+
+                <div class="stat-card">
+
+                    <h3>
+                        Reorder Suggestions
+                    </h3>
+
+                    <p id="stat-reorders">
+                        0
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <div class="table-container">
+
+                <h2>
+                    Inventory Forecast Summary
+                </h2>
+
+                <p class="small summary-description">
+                    Forecast uses scheduled procedures,
+                    BOM consumption, current stock,
+                    and supplier lead time.
+                </p>
+
+                <div id="monitoring-summary"></div>
+
+            </div>
+
+        </section>
+
+
+        <!-- =========================
+             APPOINTMENTS
+        ========================= -->
+        <section
+            id="appointments-tab"
+            class="admin-tab"
+        >
+
+            <div class="table-container">
+
+                <h2>
+                    Appointment Requests
+                </h2>
+
+                <table>
+
+                    <thead>
+
+                        <tr>
+
+                            <th>
+                                Patient
+                            </th>
+
+                            <th>
+                                Procedure
+                            </th>
+
+                            <th>
+                                Date
+                            </th>
+
+                            <th>
+                                Status
+                            </th>
+
+                            <th>
+                                Action
+                            </th>
+
+                        </tr>
+
+                    </thead>
+
+                    <tbody id="app-tbody"></tbody>
+
+                </table>
+
+            </div>
+
+        </section>
+
+
+        <!-- =========================
+             PREDICTIVE INVENTORY
+        ========================= -->
+        <section
+            id="inventory-tab"
+            class="admin-tab"
+        >
+
+            <div class="forecast-controls">
+
+                <div class="field">
+
+                    <label>
+                        Forecast Window
+                    </label>
+
+                    <select
+                        id="forecast-days"
+                        onchange="renderInventory()"
+                    >
+
+                        <option value="7">
+                            Next 7 days
+                        </option>
+
+                        <option value="14">
+                            Next 14 days
+                        </option>
+
+                        <option value="30" selected>
+                            Next 30 days
+                        </option>
+
+                    </select>
+
+                </div>
+
+
+                <button
+                    class="btn btn-purple"
+                    onclick="generateReorders()"
+                >
+
+                    <i class="fas fa-cart-plus"></i>
+
+                    Generate Reorder Suggestions
+
+                </button>
+
+            </div>
+
+
+            <div id="inventory-notice"></div>
+
+
+            <div class="table-container">
+
+                <h2>
+                    Predictive Restock Forecast
+                </h2>
+
+                <table>
+
+                    <thead>
+
+                        <tr>
+
+                            <th>
+                                Material
+                            </th>
+
+                            <th>
+                                On Hand
+                            </th>
+
+                            <th>
+                                Forecast Use
+                            </th>
+
+                            <th>
+                                Projected Stock
+                            </th>
+
+                            <th>
+                                Lead Time
+                            </th>
+
+                            <th>
+                                Reorder Point
+                            </th>
+
+                            <th>
+                                Recommendation
+                            </th>
+
+                            <th>
+                                Adjust
+                            </th>
+
+                        </tr>
+
+                    </thead>
+
+                    <tbody id="inventory-tbody"></tbody>
+
+                </table>
+
+            </div>
+
+
+            <div class="table-container">
+
+                <h2>
+                    Reorder Suggestions
+                </h2>
+
+                <div
+                    id="reorder-list"
+                    class="small"
+                >
+                    No suggestions generated yet.
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- =========================
+             BOM
+        ========================= -->
+        <section
+            id="bom-tab"
+            class="admin-tab"
+        >
+
+            <div class="table-container">
+
+                <h2>
+                    Bill of Materials (BOM)
+                </h2>
+
+                <p class="small">
+                    Consumption multipliers applied automatically
+                    to scheduled procedures.
+                </p>
+
+                <table>
+
+                    <thead>
+
+                        <tr>
+
+                            <th>
+                                Procedure
+                            </th>
+
+                            <th>
+                                Material
+                            </th>
+
+                            <th>
+                                Units / Procedure
+                            </th>
+
+                        </tr>
+
+                    </thead>
+
+                    <tbody id="bom-tbody"></tbody>
+
+                </table>
+
+            </div>
+
+        </section>
+
+    </main>
+
+</div>
+
+
+<!-- =========================
+     QUICK INVENTORY ADJUSTMENT
+========================= -->
+<div
+    id="adjust-modal"
+    class="modal-overlay"
+>
+
+    <div class="modal-card modal-wide">
+
+        <h2>
+            Quick Inventory Adjust
+        </h2>
+
+        <p
+            id="adjust-material-name"
+            class="small"
+        ></p>
+
+
+        <div class="quick-adjust">
+
+            <input
+                type="number"
+                id="adjust-qty"
+                min="0"
+                step="1"
+                placeholder="New on-hand quantity"
+            >
+
+            <input
+                type="text"
+                id="adjust-reason"
+                placeholder="Reason (e.g. dropped cartridge)"
+            >
+
+        </div>
+
+
+        <div class="modal-actions">
+
+            <button
+                class="btn btn-light"
+                onclick="closeAdjust()"
+            >
+                Cancel
+            </button>
+
+            <button
+                class="btn btn-purple"
+                onclick="saveAdjust()"
+            >
+                Save Adjustment
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<script src="script.js"></script>
+
+</body>
+</html>
