@@ -1,617 +1,407 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pecaña Dental Clinic System</title>
-
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="style.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Pecaña Dental Clinic Management System</title>
+<link rel="stylesheet"
+href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<link rel="stylesheet" href="style.css">
 </head>
 
 <body>
 
-<!-- =========================
-     PATIENT PORTAL
-========================= -->
-<div id="patient-portal">
+<header>
+  <div class="logo" onclick="page('home')">
+    PECAÑA <span>DENTAL</span>
+  </div>
 
-    <nav class="p-nav">
-        <div class="container">
-            <div class="p-brand">
-                PECAÑA<span>DENTAL</span>
-            </div>
+  <nav>
+    <a onclick="page('home')">Home</a>
+    <a onclick="page('services')">Services</a>
+    <a onclick="page('appointment')">Appointment</a>
+    <a onclick="page('queue')">Queue Status</a>
+    <a onclick="page('patient')">Patient Information</a>
+    <button onclick="openLogin()">Admin Login</button>
+  </nav>
+</header>
 
-            <button class="staff-login-btn" onclick="toggleModal(true)">
-                Staff Login
-            </button>
+<main>
+
+<!-- HOME -->
+<section id="home" class="page active">
+  <div class="hero">
+    <span>Integrated Dental Clinic Management</span>
+    <h1>Healthy Smiles,<br>Better Management.</h1>
+    <p>
+      Manage appointments, patient queues, inventory,
+      dental procedures and predictive restocking in one system.
+    </p>
+
+    <div class="buttons">
+      <button onclick="page('appointment')">Book Appointment</button>
+      <button class="outline" onclick="page('services')">View Services</button>
+    </div>
+  </div>
+
+  <div class="cards">
+    <div>
+      <i class="fa-solid fa-calendar-check"></i>
+      <h3>Appointments</h3>
+      <p>Schedule and manage dental appointments.</p>
+    </div>
+
+    <div>
+      <i class="fa-solid fa-users"></i>
+      <h3>Queue Management</h3>
+      <p>Monitor waiting and serving patients.</p>
+    </div>
+
+    <div>
+      <i class="fa-solid fa-boxes-stacked"></i>
+      <h3>Smart Inventory</h3>
+      <p>Forecast future material requirements.</p>
+    </div>
+  </div>
+</section>
+
+
+<!-- SERVICES -->
+<section id="services" class="page">
+  <h2>Dental Services</h2>
+  <p class="subtitle">Select a service to book an appointment.</p>
+
+  <div class="service-grid">
+
+    <div class="service" onclick="book('Cleaning')">
+      <i class="fa-solid fa-tooth"></i>
+      <h3>Dental Cleaning</h3>
+      <p>Professional cleaning and preventive care.</p>
+    </div>
+
+    <div class="service" onclick="book('Extraction')">
+      <i class="fa-solid fa-tooth"></i>
+      <h3>Tooth Extraction</h3>
+      <p>Safe removal of problematic teeth.</p>
+    </div>
+
+    <div class="service" onclick="book('Filling')">
+      <i class="fa-solid fa-tooth"></i>
+      <h3>Dental Filling</h3>
+      <p>Restoration of damaged or decayed teeth.</p>
+    </div>
+
+    <div class="service" onclick="book('Root Canal')">
+      <i class="fa-solid fa-tooth"></i>
+      <h3>Root Canal</h3>
+      <p>Treatment for infected dental pulp.</p>
+    </div>
+
+  </div>
+</section>
+
+
+<!-- APPOINTMENT -->
+<section id="appointment" class="page">
+  <h2>Book an Appointment</h2>
+
+  <form onsubmit="addAppointment(event)">
+
+    <input id="name" placeholder="Full Name" required>
+
+    <input id="phone" placeholder="Phone Number" required>
+
+    <select id="service" required>
+      <option value="">Select Procedure</option>
+      <option>Cleaning</option>
+      <option>Extraction</option>
+      <option>Filling</option>
+      <option>Root Canal</option>
+    </select>
+
+    <input id="date" type="date" required>
+
+    <button type="submit">
+      Submit Appointment
+    </button>
+
+  </form>
+
+  <div id="appointmentMessage"></div>
+</section>
+
+
+<!-- QUEUE -->
+<section id="queue" class="page">
+  <h2>Queue Status</h2>
+
+  <div id="currentQueue" class="queue-main"></div>
+
+  <h3>Waiting Patients</h3>
+
+  <div id="queueList"></div>
+</section>
+
+
+<!-- PATIENT INFORMATION -->
+<section id="patient" class="page">
+  <h2>Patient Information</h2>
+
+  <div class="info">
+    <i class="fa-solid fa-user"></i>
+
+    <h3>Patient Queue System</h3>
+
+    <p>
+      Approved appointments automatically enter the
+      waiting queue. Patients can monitor their
+      current queue status.
+    </p>
+  </div>
+</section>
+
+</main>
+
+
+<!-- ================= ADMIN LOGIN ================= -->
+
+<div id="loginModal" class="modal">
+
+  <div class="login-box">
+
+    <button class="close" onclick="closeLogin()">×</button>
+
+    <div class="login-icon">
+      <i class="fa-solid fa-user-shield"></i>
+    </div>
+
+    <h2>Admin Login</h2>
+    <p>Sign in to the clinic management system.</p>
+
+    <input id="adminUser" placeholder="Username">
+
+    <input id="adminPass" type="password" placeholder="Password">
+
+    <button onclick="adminLogin()">
+      <i class="fa-solid fa-right-to-bracket"></i>
+      Login
+    </button>
+
+    <div id="loginError"></div>
+
+  </div>
+
+</div>
+
+
+<!-- ================= ADMIN SYSTEM ================= -->
+
+<div id="adminPanel" class="admin-panel">
+
+  <aside>
+
+    <div class="admin-logo">
+      <i class="fa-solid fa-tooth"></i>
+      <div>
+        <strong>PECAÑA</strong>
+        <small>ADMIN SYSTEM</small>
+      </div>
+    </div>
+
+    <a onclick="adminPage('dashboard')">
+      <i class="fa-solid fa-chart-line"></i> Dashboard
+    </a>
+
+    <a onclick="adminPage('appointments')">
+      <i class="fa-solid fa-calendar-check"></i> Appointments
+    </a>
+
+    <a onclick="adminPage('queueAdmin')">
+      <i class="fa-solid fa-users"></i> Queue Management
+    </a>
+
+    <a onclick="adminPage('patients')">
+      <i class="fa-solid fa-user-group"></i> Patients
+    </a>
+
+    <a onclick="adminPage('inventory')">
+      <i class="fa-solid fa-boxes-stacked"></i> Inventory
+    </a>
+
+    <a onclick="adminPage('forecast')">
+      <i class="fa-solid fa-chart-column"></i> Restock Forecast
+    </a>
+
+    <a onclick="adminPage('reports')">
+      <i class="fa-solid fa-file-lines"></i> Reports
+    </a>
+
+    <a onclick="logoutAdmin()" class="logout">
+      <i class="fa-solid fa-right-from-bracket"></i> Logout
+    </a>
+
+  </aside>
+
+
+  <div class="admin-content">
+
+    <div class="admin-top">
+      <div>
+        <h2 id="adminTitle">Dashboard</h2>
+        <p>Pecaña Dental Clinic Management System</p>
+      </div>
+
+      <span>
+        <i class="fa-solid fa-user-shield"></i>
+        Administrator
+      </span>
+    </div>
+
+
+    <!-- DASHBOARD -->
+
+    <div id="dashboard" class="admin-page active">
+
+      <div class="stats">
+
+        <div>
+          <i class="fa-solid fa-calendar"></i>
+          <strong id="statAppointments">0</strong>
+          <span>Appointments</span>
         </div>
-    </nav>
 
-    <section class="p-hero">
-        <h1>
-            PECAÑA DENTAL CLINIC
-            <br><span>Polangui</span>
-        </h1>
-    </section>
+        <div>
+          <i class="fa-solid fa-users"></i>
+          <strong id="statQueue">0</strong>
+          <span>Waiting Patients</span>
+        </div>
 
-    <div class="booking-card">
+        <div>
+          <i class="fa-solid fa-box"></i>
+          <strong id="statInventory">0</strong>
+          <span>Inventory Items</span>
+        </div>
 
-        <form id="p-booking-form">
+        <div>
+          <i class="fa-solid fa-triangle-exclamation"></i>
+          <strong id="statAlerts">0</strong>
+          <span>Restock Alerts</span>
+        </div>
 
-            <div class="form-row">
+      </div>
 
-                <input
-                    type="text"
-                    id="p-name"
-                    placeholder="Patient Full Name"
-                    required
-                >
-
-                <input
-                    type="tel"
-                    id="p-phone"
-                    placeholder="Contact Number"
-                    required
-                >
-
-            </div>
-
-            <div class="form-row">
-
-                <select id="p-service" required>
-
-                    <option value="">
-                        Select Treatment
-                    </option>
-
-                    <option>Cleaning</option>
-                    <option>Extraction</option>
-                    <option>Filling</option>
-                    <option>Root Canal</option>
-                    <option>Full-mouth Restoration</option>
-
-                </select>
-
-                <input
-                    type="date"
-                    id="p-date"
-                    required
-                >
-
-            </div>
-
-            <button
-                type="submit"
-                class="submit-btn"
-            >
-                Submit Appointment Request
-            </button>
-
-        </form>
+      <div class="dashboard-box">
+        <h3>System Overview</h3>
+        <p>
+          The predictive inventory module analyzes approved
+          appointments and expected procedure consumption
+          to identify future supply shortages.
+        </p>
+      </div>
 
     </div>
 
-</div>
 
+    <!-- APPOINTMENTS -->
 
-<!-- =========================
-     LOGIN MODAL
-========================= -->
-<div id="login-modal" class="modal-overlay">
+    <div id="appointments" class="admin-page">
 
-    <div class="modal-card">
-
-        <h2>
-            Staff Login
-        </h2>
-
-        <form onsubmit="adminLogin(event)">
-
-            <div class="auth-group">
-
-                <i class="fas fa-user"></i>
-
-                <input
-                    type="text"
-                    id="adm-user"
-                    placeholder="User (admin)"
-                    required
-                >
-
-            </div>
-
-
-            <div class="auth-group">
-
-                <i class="fas fa-lock"></i>
-
-                <input
-                    type="password"
-                    id="adm-pass"
-                    placeholder="Pass (1234)"
-                    required
-                >
-
-            </div>
-
-
-            <button
-                type="submit"
-                class="login-action-btn"
-            >
-                Login
-            </button>
-
-            <p
-                id="auth-error"
-                class="error-msg"
-            >
-                Incorrect credentials.
-                Use admin / 1234.
-            </p>
-
-            <button
-                type="button"
-                onclick="toggleModal(false)"
-                class="cancel-btn"
-            >
-                Cancel
-            </button>
-
-        </form>
+      <div id="appointmentTable"></div>
 
     </div>
 
-</div>
 
+    <!-- QUEUE MANAGEMENT -->
 
-<!-- =========================
-     ADMIN DASHBOARD
-========================= -->
-<div id="admin-dashboard" class="hidden">
+    <div id="queueAdmin" class="admin-page">
 
-    <aside class="sidebar">
-
-        <div class="sidebar-brand">
-            PECAÑA ADMIN
-        </div>
-
-        <ul class="side-nav">
-
-            <li
-                class="active"
-                onclick="switchAdminTab('monitoring', this)"
-            >
-                <i class="fas fa-chart-line"></i>
-                Monitoring
-            </li>
-
-            <li
-                onclick="switchAdminTab('appointments', this)"
-            >
-                <i class="fas fa-calendar-check"></i>
-                Appointments
-            </li>
-
-            <li
-                onclick="switchAdminTab('inventory', this)"
-            >
-                <i class="fas fa-boxes-stacked"></i>
-                Predictive Inventory
-            </li>
-
-            <li
-                onclick="switchAdminTab('bom', this)"
-            >
-                <i class="fas fa-list-check"></i>
-                Bill of Materials
-            </li>
-
-            <li onclick="logout()">
-                <i class="fas fa-right-from-bracket"></i>
-                Logout
-            </li>
-
-        </ul>
-
-    </aside>
-
-
-    <main class="content-area">
-
-        <div class="content-header">
-
-            <h1 id="tab-title">
-                Operational Monitoring
-            </h1>
-
-            <div class="small">
-                Demand-driven procurement
-            </div>
-
-        </div>
-
-
-        <!-- =========================
-             MONITORING
-        ========================= -->
-        <section
-            id="monitoring-tab"
-            class="admin-tab active"
-        >
-
-            <div class="stats-grid">
-
-                <div class="stat-card">
-
-                    <h3>
-                        Total Appointments
-                    </h3>
-
-                    <p id="stat-total">
-                        0
-                    </p>
-
-                </div>
-
-
-                <div class="stat-card">
-
-                    <h3>
-                        Pending
-                    </h3>
-
-                    <p id="stat-pending">
-                        0
-                    </p>
-
-                </div>
-
-
-                <div class="stat-card">
-
-                    <h3>
-                        Low-stock Forecasts
-                    </h3>
-
-                    <p id="stat-low">
-                        0
-                    </p>
-
-                </div>
-
-
-                <div class="stat-card">
-
-                    <h3>
-                        Reorder Suggestions
-                    </h3>
-
-                    <p id="stat-reorders">
-                        0
-                    </p>
-
-                </div>
-
-            </div>
-
-
-            <div class="table-container">
-
-                <h2>
-                    Inventory Forecast Summary
-                </h2>
-
-                <p class="small summary-description">
-                    Forecast uses scheduled procedures,
-                    BOM consumption, current stock,
-                    and supplier lead time.
-                </p>
-
-                <div id="monitoring-summary"></div>
-
-            </div>
-
-        </section>
-
-
-        <!-- =========================
-             APPOINTMENTS
-        ========================= -->
-        <section
-            id="appointments-tab"
-            class="admin-tab"
-        >
-
-            <div class="table-container">
-
-                <h2>
-                    Appointment Requests
-                </h2>
-
-                <table>
-
-                    <thead>
-
-                        <tr>
-
-                            <th>
-                                Patient
-                            </th>
-
-                            <th>
-                                Procedure
-                            </th>
-
-                            <th>
-                                Date
-                            </th>
-
-                            <th>
-                                Status
-                            </th>
-
-                            <th>
-                                Action
-                            </th>
-
-                        </tr>
-
-                    </thead>
-
-                    <tbody id="app-tbody"></tbody>
-
-                </table>
-
-            </div>
-
-        </section>
-
-
-        <!-- =========================
-             PREDICTIVE INVENTORY
-        ========================= -->
-        <section
-            id="inventory-tab"
-            class="admin-tab"
-        >
-
-            <div class="forecast-controls">
-
-                <div class="field">
-
-                    <label>
-                        Forecast Window
-                    </label>
-
-                    <select
-                        id="forecast-days"
-                        onchange="renderInventory()"
-                    >
-
-                        <option value="7">
-                            Next 7 days
-                        </option>
-
-                        <option value="14">
-                            Next 14 days
-                        </option>
-
-                        <option value="30" selected>
-                            Next 30 days
-                        </option>
-
-                    </select>
-
-                </div>
-
-
-                <button
-                    class="btn btn-purple"
-                    onclick="generateReorders()"
-                >
-
-                    <i class="fas fa-cart-plus"></i>
-
-                    Generate Reorder Suggestions
-
-                </button>
-
-            </div>
-
-
-            <div id="inventory-notice"></div>
-
-
-            <div class="table-container">
-
-                <h2>
-                    Predictive Restock Forecast
-                </h2>
-
-                <table>
-
-                    <thead>
-
-                        <tr>
-
-                            <th>
-                                Material
-                            </th>
-
-                            <th>
-                                On Hand
-                            </th>
-
-                            <th>
-                                Forecast Use
-                            </th>
-
-                            <th>
-                                Projected Stock
-                            </th>
-
-                            <th>
-                                Lead Time
-                            </th>
-
-                            <th>
-                                Reorder Point
-                            </th>
-
-                            <th>
-                                Recommendation
-                            </th>
-
-                            <th>
-                                Adjust
-                            </th>
-
-                        </tr>
-
-                    </thead>
-
-                    <tbody id="inventory-tbody"></tbody>
-
-                </table>
-
-            </div>
-
-
-            <div class="table-container">
-
-                <h2>
-                    Reorder Suggestions
-                </h2>
-
-                <div
-                    id="reorder-list"
-                    class="small"
-                >
-                    No suggestions generated yet.
-                </div>
-
-            </div>
-
-        </section>
-
-
-        <!-- =========================
-             BOM
-        ========================= -->
-        <section
-            id="bom-tab"
-            class="admin-tab"
-        >
-
-            <div class="table-container">
-
-                <h2>
-                    Bill of Materials (BOM)
-                </h2>
-
-                <p class="small">
-                    Consumption multipliers applied automatically
-                    to scheduled procedures.
-                </p>
-
-                <table>
-
-                    <thead>
-
-                        <tr>
-
-                            <th>
-                                Procedure
-                            </th>
-
-                            <th>
-                                Material
-                            </th>
-
-                            <th>
-                                Units / Procedure
-                            </th>
-
-                        </tr>
-
-                    </thead>
-
-                    <tbody id="bom-tbody"></tbody>
-
-                </table>
-
-            </div>
-
-        </section>
-
-    </main>
-
-</div>
-
-
-<!-- =========================
-     QUICK INVENTORY ADJUSTMENT
-========================= -->
-<div
-    id="adjust-modal"
-    class="modal-overlay"
->
-
-    <div class="modal-card modal-wide">
-
-        <h2>
-            Quick Inventory Adjust
-        </h2>
-
-        <p
-            id="adjust-material-name"
-            class="small"
-        ></p>
-
-
-        <div class="quick-adjust">
-
-            <input
-                type="number"
-                id="adjust-qty"
-                min="0"
-                step="1"
-                placeholder="New on-hand quantity"
-            >
-
-            <input
-                type="text"
-                id="adjust-reason"
-                placeholder="Reason (e.g. dropped cartridge)"
-            >
-
-        </div>
-
-
-        <div class="modal-actions">
-
-            <button
-                class="btn btn-light"
-                onclick="closeAdjust()"
-            >
-                Cancel
-            </button>
-
-            <button
-                class="btn btn-purple"
-                onclick="saveAdjust()"
-            >
-                Save Adjustment
-            </button>
-
-        </div>
+      <div id="adminQueue"></div>
 
     </div>
 
+
+    <!-- PATIENTS -->
+
+    <div id="patients" class="admin-page">
+
+      <div id="patientTable"></div>
+
+    </div>
+
+
+    <!-- INVENTORY -->
+
+    <div id="inventory" class="admin-page">
+
+      <p class="muted">
+        Monitor current stock, thresholds and projected consumption.
+      </p>
+
+      <div id="inventoryTable"></div>
+
+    </div>
+
+
+    <!-- FORECAST -->
+
+    <div id="forecast" class="admin-page">
+
+      <div class="forecast-head">
+        <div>
+          <p>
+            Appointment-driven supply demand forecasting.
+          </p>
+        </div>
+
+        <select id="forecastDays" onchange="renderForecast()">
+          <option value="7">Next 7 Days</option>
+          <option value="14">Next 14 Days</option>
+          <option value="30">Next 30 Days</option>
+        </select>
+      </div>
+
+      <div id="forecastResults"></div>
+
+    </div>
+
+
+    <!-- REPORTS -->
+
+    <div id="reports" class="admin-page">
+
+
+
+      <div class="report-grid">
+
+        <div>
+          <i class="fa-solid fa-calendar-days"></i>
+          <h4>Appointment Report</h4>
+          <p>Review scheduled and completed appointments.</p>
+        </div>
+
+        <div>
+          <i class="fa-solid fa-users"></i>
+          <h4>Queue Report</h4>
+          <p>Review patient queue activity.</p>
+        </div>
+
+        <div>
+          <i class="fa-solid fa-boxes-stacked"></i>
+          <h4>Inventory Report</h4>
+          <p>Review stock and projected material demand.</p>
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
 </div>
 
+<footer>
+© <span id="year"></span> Pecaña Dental Clinic
+</footer>
 
 <script src="script.js"></script>
 

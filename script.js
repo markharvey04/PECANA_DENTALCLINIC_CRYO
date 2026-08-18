@@ -1,1367 +1,841 @@
-/* =====================================================
-   PECAÑA DENTAL CLINIC SYSTEM
-   Predictive Restock Forecasting
-===================================================== */
-
-
-/* =====================================================
-   APPOINTMENTS
-===================================================== */
-
-let appts = [];
-
-
-/* =====================================================
-   INVENTORY ADJUSTMENT
-===================================================== */
-
-let adjustIndex = null;
-
-
-/* =====================================================
-   REORDER SUGGESTIONS
-===================================================== */
-
-let reorderSuggestions = [];
-
-
-/* =====================================================
-   BILL OF MATERIALS
-=====================================================
-
-   Each procedure consumes a predefined amount
-   of each material.
-
-===================================================== */
-
-const bom = {
-
-    "Cleaning": {
-
-        "Dental floss": 1,
-
-        "Prophy paste": 1
-
-    },
-
-
-    "Extraction": {
-
-        "Local anesthetic": 2,
-
-        "Dental floss": 1,
-
-        "Suture": 2
-
-    },
-
-
-    "Filling": {
-
-        "Composite resin": 1,
-
-        "Bonding agent": 1,
-
-        "Local anesthetic": 1
-
-    },
-
-
-    "Root Canal": {
-
-        "Composite resin": 1,
-
-        "Bonding agent": 1,
-
-        "Local anesthetic": 2,
-
-        "Dental floss": 1
-
-    },
-
-
-    "Full-mouth Restoration": {
-
-        "Composite resin": 8,
-
-        "Bonding agent": 4,
-
-        "Local anesthetic": 6,
-
-        "Dental floss": 4
-
-    }
-
-};
-
-
-/* =====================================================
-   INVENTORY
-=====================================================
-
-   onHand       = current inventory
-
-   reorderPoint = minimum safe stock
-
-   leadTime     = supplier delivery time in days
-
-===================================================== */
-
-let inventory = [
-
-    {
-        name: "Composite resin",
-        onHand: 18,
-        reorderPoint: 10,
-        leadTime: 5,
-        unit: "units"
-    },
-
-
-    {
-        name: "Bonding agent",
-        onHand: 14,
-        reorderPoint: 8,
-        leadTime: 5,
-        unit: "units"
-    },
-
-
-    {
-        name: "Local anesthetic",
-        onHand: 24,
-        reorderPoint: 12,
-        leadTime: 3,
-        unit: "cartridges"
-    },
-
-
-    {
-        name: "Dental floss",
-        onHand: 10,
-        reorderPoint: 6,
-        leadTime: 4,
-        unit: "units"
-    },
-
-
-    {
-        name: "Suture",
-        onHand: 16,
-        reorderPoint: 8,
-        leadTime: 5,
-        unit: "units"
-    },
-
-
-    {
-        name: "Prophy paste",
-        onHand: 12,
-        reorderPoint: 5,
-        leadTime: 4,
-        unit: "units"
-    }
-
+/* ================= DATA ================= */
+
+let appointments=[
+  {
+    id:1,
+    name:"Maria Santos",
+    phone:"09171112222",
+    service:"Cleaning",
+    date:todayPlus(1),
+    status:"Pending"
+  },
+  {
+    id:2,
+    name:"Juan Dela Cruz",
+    phone:"09173334444",
+    service:"Extraction",
+    date:todayPlus(2),
+    status:"Approved"
+  }
+];
+
+let queue=[
+  {
+    id:"A-001",
+    appointmentId:2,
+    name:"Juan Dela Cruz",
+    service:"Extraction",
+    status:"Waiting"
+  }
+];
+
+let inventory=[
+  {
+    id:1,
+    name:"Dental Floss",
+    stock:10,
+    threshold:5,
+    lead:5,
+    supplier:"Preferred Dental Supplier",
+    unit:"units"
+  },
+  {
+    id:2,
+    name:"Composite Resin",
+    stock:20,
+    threshold:8,
+    lead:5,
+    supplier:"Dental Materials Supply",
+    unit:"units"
+  },
+  {
+    id:3,
+    name:"Anesthetic Cartridge",
+    stock:30,
+    threshold:10,
+    lead:7,
+    supplier:"Medical Dental Supply",
+    unit:"cartridges"
+  },
+  {
+    id:4,
+    name:"Suture",
+    stock:15,
+    threshold:5,
+    lead:5,
+    supplier:"Dental Surgical Supply",
+    unit:"packs"
+  }
 ];
 
 
-/* =====================================================
-   LOGIN MODAL
-===================================================== */
+/* ================= BOM ================= */
 
-function toggleModal(show) {
+/*
+  Procedure = materials consumed per completed procedure.
+*/
 
-    document.getElementById(
-        "login-modal"
-    ).style.display = show
-        ? "flex"
-        : "none";
+const BOM={
+  Cleaning:{
+    "Dental Floss":1
+  },
 
+  Extraction:{
+    "Anesthetic Cartridge":1,
+    "Suture":1
+  },
+
+  Filling:{
+    "Composite Resin":1,
+    "Dental Floss":1,
+    "Anesthetic Cartridge":1
+  },
+
+  "Root Canal":{
+    "Composite Resin":2,
+    "Dental Floss":1,
+    "Anesthetic Cartridge":2
+  }
+};
+
+
+/* ================= NAVIGATION ================= */
+
+function page(name){
+
+  document.querySelectorAll(".page")
+    .forEach(x=>x.classList.remove("active"));
+
+  document.getElementById(name)
+    .classList.add("active");
+
+  if(name==="queue")
+    renderQueue();
 }
 
 
-/* =====================================================
-   ADMIN LOGIN
-===================================================== */
+/* ================= HELPERS ================= */
 
-function adminLogin(event) {
+function todayPlus(days){
 
-    event.preventDefault();
+  let d=new Date();
 
+  d.setDate(d.getDate()+days);
 
-    const username =
-        document.getElementById(
-            "adm-user"
-        ).value;
+  return d.toISOString().split("T")[0];
+}
 
+function dateLimit(days){
 
-    const password =
-        document.getElementById(
-            "adm-pass"
-        ).value;
+  let d=new Date();
 
+  d.setDate(d.getDate()+days);
 
-    const error =
-        document.getElementById(
-            "auth-error"
-        );
+  return d;
+}
 
 
-    if (
-        username === "admin" &&
-        password === "1234"
-    ) {
+/* ================= APPOINTMENTS ================= */
 
-        document
-            .getElementById("patient-portal")
-            .classList
-            .add("hidden");
+function book(service){
+
+  page("appointment");
+
+  document.getElementById("service").value=service;
+}
+
+function addAppointment(e){
+
+  e.preventDefault();
+
+  appointments.push({
+    id:appointments.length+1,
+    name:document.getElementById("name").value.trim(),
+    phone:document.getElementById("phone").value.trim(),
+    service:document.getElementById("service").value,
+    date:document.getElementById("date").value,
+    status:"Pending"
+  });
+
+  document.getElementById("appointmentMessage").innerHTML=
+    "Appointment submitted successfully. Waiting for admin approval.";
+
+  e.target.reset();
+}
 
 
-        document
-            .getElementById("admin-dashboard")
-            .classList
-            .remove("hidden");
+/* ================= QUEUE ================= */
 
+function syncQueue(){
 
-        toggleModal(false);
+  appointments.forEach(a=>{
 
-        error.style.display = "none";
+    if(a.status!=="Approved" &&
+       a.status!=="Serving")
+      return;
 
-        updateAll();
+    let q=queue.find(x=>x.appointmentId===a.id);
 
-    } else {
+    if(!q){
 
-        error.style.display = "block";
+      queue.push({
+        id:"A-"+String(queue.length+1).padStart(3,"0"),
+        appointmentId:a.id,
+        name:a.name,
+        service:a.service,
+        status:a.status==="Serving"?"Serving":"Waiting"
+      });
 
+    }else{
+
+      q.name=a.name;
+      q.service=a.service;
+
+      if(a.status==="Serving")
+        q.status="Serving";
     }
+  });
+}
 
+function renderQueue(){
+
+  syncQueue();
+
+  let serving=queue.find(x=>x.status==="Serving");
+
+  document.getElementById("currentQueue").innerHTML=
+    serving
+    ? `<h3>Now Serving</h3>
+       <h1>${serving.id}</h1>
+       <p>${serving.name}</p>
+       <small>${serving.service}</small>`
+    : `<h3>No patient is currently being served.</h3>`;
+
+  document.getElementById("queueList").innerHTML=
+    queue
+    .filter(x=>x.status!=="Completed")
+    .map(q=>`
+      <div class="queue-item">
+
+        <div>
+          <div class="queue-number">${q.id}</div>
+          <strong>${q.name}</strong>
+          <p>${q.service}</p>
+        </div>
+
+        <span class="status ${q.status.toLowerCase()}">
+          ${q.status}
+        </span>
+
+      </div>
+    `).join("");
 }
 
 
-/* =====================================================
-   LOGOUT
-===================================================== */
+/* ================= LOGIN ================= */
 
-function logout() {
+function openLogin(){
 
-    location.reload();
+  document.getElementById("loginModal")
+    .style.display="flex";
 
+  document.getElementById("adminUser").focus();
+}
+
+function closeLogin(){
+
+  document.getElementById("loginModal")
+    .style.display="none";
+}
+
+function adminLogin(){
+
+  let user=document.getElementById("adminUser").value;
+  let pass=document.getElementById("adminPass").value;
+
+  if(user==="admin" && pass==="1234"){
+
+    closeLogin();
+
+    document.getElementById("adminPanel")
+      .classList.add("show");
+
+    adminPage("dashboard");
+
+  }else{
+
+    document.getElementById("loginError").textContent=
+      "Invalid username or password.";
+  }
+}
+
+function logoutAdmin(){
+
+  document.getElementById("adminPanel")
+    .classList.remove("show");
+
+  document.getElementById("adminUser").value="";
+  document.getElementById("adminPass").value="";
+  document.getElementById("loginError").textContent="";
 }
 
 
-/* =====================================================
-   ADMIN TAB SWITCHER
-===================================================== */
+/* ================= ADMIN NAVIGATION ================= */
 
-function switchAdminTab(
-    tabId,
-    element
-) {
+const titles={
+  dashboard:"Dashboard",
+  appointments:"Appointment Management",
+  queueAdmin:"Queue Management",
+  patients:"Patient Management",
+  inventory:"Inventory Management",
+  forecast:"Predictive Restock Forecast",
+  reports:"Reports"
+};
 
-    document
-        .querySelectorAll(".admin-tab")
-        .forEach(
-            tab =>
-                tab.classList.remove("active")
-        );
+function adminPage(name){
 
+  document.querySelectorAll(".admin-page")
+    .forEach(x=>x.classList.remove("active"));
 
-    document
-        .querySelectorAll(".side-nav li")
-        .forEach(
-            item =>
-                item.classList.remove("active")
-        );
+  document.getElementById(name)
+    .classList.add("active");
 
+  document.getElementById("adminTitle")
+    .textContent=titles[name];
 
-    document
-        .getElementById(
-            tabId + "-tab"
-        )
-        .classList
-        .add("active");
+  if(name==="dashboard")
+    renderDashboard();
 
+  if(name==="appointments")
+    renderAppointments();
 
-    element.classList.add("active");
+  if(name==="queueAdmin")
+    renderAdminQueue();
 
+  if(name==="patients")
+    renderPatients();
 
-    document
-        .getElementById("tab-title")
-        .innerText =
-            element.innerText.trim();
-
-
-    if (tabId === "inventory") {
-
-        renderInventory();
-
-    }
-
-}
-
-
-/* =====================================================
-   PATIENT BOOKING
-===================================================== */
-
-document
-    .getElementById("p-booking-form")
-    .addEventListener(
-        "submit",
-        function (event) {
-
-            event.preventDefault();
-
-
-            const entry = {
-
-                name:
-                    document
-                        .getElementById("p-name")
-                        .value,
-
-                phone:
-                    document
-                        .getElementById("p-phone")
-                        .value,
-
-                service:
-                    document
-                        .getElementById("p-service")
-                        .value,
-
-                date:
-                    document
-                        .getElementById("p-date")
-                        .value,
-
-                status: "Pending",
-
-                completed: false
-
-            };
-
-
-            appts.push(entry);
-
-
-            updateAll();
-
-
-            alert(
-                "Appointment Request Sent Successfully!"
-            );
-
-
-            this.reset();
-
-        }
-    );
-
-
-/* =====================================================
-   FORECAST CALCULATION
-=====================================================
-
-   Looks at appointments within the selected
-   forecast period.
-
-===================================================== */
-
-function getForecast(days) {
-
-    const now = new Date();
-
-
-    const cutoff = new Date();
-
-
-    cutoff.setHours(
-        23,
-        59,
-        59,
-        999
-    );
-
-
-    cutoff.setDate(
-        cutoff.getDate() + days
-    );
-
-
-    const usage = {};
-
-
-    inventory.forEach(
-        item => {
-            usage[item.name] = 0;
-        }
-    );
-
-
-    appts.forEach(
-        appointment => {
-
-            if (
-                !appointment.date ||
-                appointment.completed
-            ) {
-                return;
-            }
-
-
-            const appointmentDate =
-                new Date(
-                    appointment.date +
-                    "T00:00:00"
-                );
-
-
-            if (
-                appointmentDate >= now &&
-                appointmentDate <= cutoff
-            ) {
-
-                const procedureMaterials =
-                    bom[
-                        appointment.service
-                    ] || {};
-
-
-                Object.entries(
-                    procedureMaterials
-                ).forEach(
-                    ([material, quantity]) => {
-
-                        if (
-                            usage[material] !==
-                            undefined
-                        ) {
-
-                            usage[material] +=
-                                quantity;
-
-                        }
-
-                    }
-                );
-
-            }
-
-        }
-    );
-
-
-    return usage;
-
-}
-
-
-/* =====================================================
-   INVENTORY FORECAST
-===================================================== */
-
-function getInventoryForecast(days) {
-
-    const usage =
-        getForecast(days);
-
-
-    return inventory.map(
-        (item, index) => {
-
-            const forecastUse =
-                usage[item.name] || 0;
-
-
-            const projectedStock =
-                item.onHand -
-                forecastUse;
-
-
-            const reorderNeeded =
-                projectedStock <
-                item.reorderPoint;
-
-
-            return {
-
-                ...item,
-
-                index,
-
-                forecastUse,
-
-                projected:
-                    projectedStock,
-
-                reorderNeeded
-
-            };
-
-        }
-    );
-
-}
-
-
-/* =====================================================
-   RENDER INVENTORY
-===================================================== */
-
-function renderInventory() {
-
-    const days =
-        Number(
-            document
-                .getElementById(
-                    "forecast-days"
-                )
-                .value
-        );
-
-
-    const rows =
-        getInventoryForecast(days);
-
-
-    const tbody =
-        document.getElementById(
-            "inventory-tbody"
-        );
-
-
-    tbody.innerHTML = "";
-
-
-    rows.forEach(
-        row => {
-
-            let status;
-
-
-            if (
-                row.projected < 0
-            ) {
-
-                status =
-                    `<span class="badge badge-red">
-                        Insufficient
-                    </span>`;
-
-            } else if (
-                row.reorderNeeded
-            ) {
-
-                status =
-                    `<span class="badge badge-orange">
-                        Reorder
-                    </span>`;
-
-            } else {
-
-                status =
-                    `<span class="badge badge-green">
-                        OK
-                    </span>`;
-
-            }
-
-
-            tbody.innerHTML += `
-
-                <tr>
-
-                    <td>
-
-                        <strong>
-                            ${row.name}
-                        </strong>
-
-                        <br>
-
-                        <span class="small">
-                            ${row.unit}
-                        </span>
-
-                    </td>
-
-
-                    <td>
-                        ${row.onHand}
-                    </td>
-
-
-                    <td>
-                        ${row.forecastUse}
-                    </td>
-
-
-                    <td>
-
-                        <strong>
-                            ${row.projected}
-                        </strong>
-
-                    </td>
-
-
-                    <td>
-                        ${row.leadTime} days
-                    </td>
-
-
-                    <td>
-                        ${row.reorderPoint}
-                    </td>
-
-
-                    <td>
-                        ${status}
-                    </td>
-
-
-                    <td>
-
-                        <button
-                            class="btn btn-light"
-                            onclick="openAdjust(${row.index})"
-                        >
-                            Quick Adjust
-                        </button>
-
-                    </td>
-
-                </tr>
-
-            `;
-
-        }
-    );
-
-
-    const urgent =
-        rows.filter(
-            row =>
-                row.projected < 0
-        );
-
-
-    const notice =
-        document.getElementById(
-            "inventory-notice"
-        );
-
-
-    if (urgent.length) {
-
-        notice.innerHTML = `
-
-            <div class="notice">
-
-                <strong>
-                    Warning:
-                </strong>
-
-                ${urgent.length}
-                material(s) will be
-                exhausted within the
-                selected ${days}-day
-                forecast window.
-
-                Review reorder
-                suggestions before
-                accepting additional
-                demand.
-
-            </div>
-
-        `;
-
-    } else {
-
-        notice.innerHTML = "";
-
-    }
-
-
-    updateStats(rows);
-
-}
-
-
-/* =====================================================
-   GENERATE REORDER SUGGESTIONS
-===================================================== */
-
-function generateReorders() {
-
-    const days =
-        Number(
-            document
-                .getElementById(
-                    "forecast-days"
-                )
-                .value
-        );
-
-
-    const rows =
-        getInventoryForecast(days)
-            .filter(
-                row =>
-                    row.reorderNeeded
-            );
-
-
-    reorderSuggestions =
-        rows.map(
-            row => ({
-
-                material:
-                    row.name,
-
-                quantity:
-                    Math.max(
-                        0,
-
-                        row.forecastUse +
-                        row.reorderPoint -
-                        row.onHand
-                    ),
-
-                leadTime:
-                    row.leadTime,
-
-                arriveBy:
-                    `${row.leadTime} day(s) after order`
-
-            })
-        );
-
-
-    const list =
-        document.getElementById(
-            "reorder-list"
-        );
-
-
-    if (
-        reorderSuggestions.length
-    ) {
-
-        list.innerHTML =
-            reorderSuggestions
-                .map(
-                    suggestion => `
-
-                        <div
-                            style="
-                                padding:10px 0;
-                                border-bottom:1px solid #eee;
-                            "
-                        >
-
-                            <strong>
-                                ${suggestion.material}
-                            </strong>
-
-                            —
-
-                            Order
-
-                            <strong>
-                                ${suggestion.quantity}
-                            </strong>
-
-                            unit(s);
-
-                            supplier lead time:
-
-                            ${suggestion.leadTime}
-                            days;
-
-                            target arrival:
-
-                            ${suggestion.arriveBy}.
-
-                        </div>
-
-                    `
-                )
-                .join("");
-
-    } else {
-
-        list.innerHTML =
-            "No reorder is required for the selected forecast window.";
-
-    }
-
-
-    updateStats(
-        getInventoryForecast(days)
-    );
-
-
-    alert(
-        reorderSuggestions.length
-
-            ? `${reorderSuggestions.length} reorder suggestion(s) generated.`
-
-            : "No reorder is required."
-    );
-
-}
-
-
-/* =====================================================
-   QUICK INVENTORY ADJUSTMENT
-===================================================== */
-
-function openAdjust(index) {
-
-    adjustIndex = index;
-
-
-    document.getElementById(
-        "adjust-material-name"
-    ).innerText =
-        `Updating: ${inventory[index].name}`;
-
-
-    document.getElementById(
-        "adjust-qty"
-    ).value =
-        inventory[index].onHand;
-
-
-    document.getElementById(
-        "adjust-reason"
-    ).value = "";
-
-
-    document.getElementById(
-        "adjust-modal"
-    ).style.display = "flex";
-
-}
-
-
-/* =====================================================
-   CLOSE ADJUSTMENT MODAL
-===================================================== */
-
-function closeAdjust() {
-
-    document.getElementById(
-        "adjust-modal"
-    ).style.display = "none";
-
-
-    adjustIndex = null;
-
-}
-
-
-/* =====================================================
-   SAVE INVENTORY ADJUSTMENT
-===================================================== */
-
-function saveAdjust() {
-
-    if (
-        adjustIndex === null
-    ) {
-        return;
-    }
-
-
-    const quantity =
-        Number(
-            document
-                .getElementById(
-                    "adjust-qty"
-                )
-                .value
-        );
-
-
-    const reason =
-        document
-            .getElementById(
-                "adjust-reason"
-            )
-            .value
-            .trim();
-
-
-    if (
-        !Number.isFinite(quantity) ||
-        quantity < 0
-    ) {
-
-        alert(
-            "Enter a valid non-negative quantity."
-        );
-
-        return;
-
-    }
-
-
-    inventory[
-        adjustIndex
-    ].onHand =
-        quantity;
-
-
-    closeAdjust();
-
-
-    updateAll();
-
-
-    alert(
-        reason
-            ? `Inventory adjustment saved: ${reason}`
-            : "Inventory adjustment saved."
-    );
-
-}
-
-
-/* =====================================================
-   APPROVE APPOINTMENT
-===================================================== */
-
-function approveApp(index) {
-
-    appts[index].status =
-        "Approved";
-
-
-    updateAll();
-
-
-    alert(
-        "Appointment Approved!"
-    );
-
-}
-
-
-/* =====================================================
-   COMPLETE PROCEDURE
-=====================================================
-
-   This is the Integrity Loop.
-
-   Completing a procedure automatically
-   deducts its BOM materials from inventory.
-
-===================================================== */
-
-function completeApp(index) {
-
-    if (
-        appts[index].completed
-    ) {
-        return;
-    }
-
-
-    const procedure =
-        bom[
-            appts[index].service
-        ] || {};
-
-
-    Object.entries(
-        procedure
-    ).forEach(
-        ([material, quantity]) => {
-
-            const item =
-                inventory.find(
-                    inventoryItem =>
-                        inventoryItem.name ===
-                        material
-                );
-
-
-            if (item) {
-
-                item.onHand =
-                    Math.max(
-                        0,
-
-                        item.onHand -
-                        quantity
-                    );
-
-            }
-
-        }
-    );
-
-
-    appts[index].completed =
-        true;
-
-
-    appts[index].status =
-        "Completed";
-
-
-    updateAll();
-
-
-    alert(
-        "Procedure completed and BOM consumption deducted from inventory."
-    );
-
-}
-
-
-/* =====================================================
-   UPDATE APPOINTMENTS TABLE
-===================================================== */
-
-function updateAppointments() {
-
-    const tbody =
-        document.getElementById(
-            "app-tbody"
-        );
-
-
-    if (!appts.length) {
-
-        tbody.innerHTML = `
-
-            <tr>
-
-                <td
-                    colspan="5"
-                    class="small"
-                >
-                    No appointment requests yet.
-                </td>
-
-            </tr>
-
-        `;
-
-        return;
-
-    }
-
-
-    tbody.innerHTML =
-        appts
-            .map(
-                (appointment, index) => {
-
-                    let badgeClass =
-                        "badge-orange";
-
-
-                    if (
-                        appointment.status ===
-                        "Approved"
-                    ) {
-
-                        badgeClass =
-                            "badge-green";
-
-                    }
-
-
-                    if (
-                        appointment.status ===
-                        "Completed"
-                    ) {
-
-                        badgeClass =
-                            "badge-green";
-
-                    }
-
-
-                    let action = "";
-
-
-                    if (
-                        appointment.status ===
-                        "Pending"
-                    ) {
-
-                        action = `
-
-                            <button
-                                class="btn btn-purple"
-                                onclick="approveApp(${index})"
-                            >
-                                Approve
-                            </button>
-
-                        `;
-
-                    }
-
-
-                    if (
-                        appointment.status ===
-                        "Approved"
-                    ) {
-
-                        action = `
-
-                            <button
-                                class="btn btn-purple"
-                                onclick="completeApp(${index})"
-                            >
-                                Complete
-                            </button>
-
-                        `;
-
-                    }
-
-
-                    return `
-
-                        <tr>
-
-                            <td>
-                                <strong>
-                                    ${appointment.name}
-                                </strong>
-                            </td>
-
-                            <td>
-                                ${appointment.service}
-                            </td>
-
-                            <td>
-                                ${appointment.date}
-                            </td>
-
-                            <td>
-
-                                <span
-                                    class="
-                                        badge
-                                        ${badgeClass}
-                                    "
-                                >
-                                    ${appointment.status}
-                                </span>
-
-                            </td>
-
-                            <td>
-                                ${action}
-                            </td>
-
-                        </tr>
-
-                    `;
-
-                }
-            )
-            .join("");
-
-}
-
-
-/* =====================================================
-   UPDATE DASHBOARD STATISTICS
-===================================================== */
-
-function updateStats(
-    rows =
-        getInventoryForecast(
-            Number(
-                document
-                    .getElementById(
-                        "forecast-days"
-                    )
-                    .value
-            )
-        )
-) {
-
-    document.getElementById(
-        "stat-total"
-    ).innerText =
-        appts.length;
-
-
-    document.getElementById(
-        "stat-pending"
-    ).innerText =
-        appts.filter(
-            appointment =>
-                appointment.status ===
-                "Pending"
-        ).length;
-
-
-    document.getElementById(
-        "stat-low"
-    ).innerText =
-        rows.filter(
-            row =>
-                row.reorderNeeded
-        ).length;
-
-
-    document.getElementById(
-        "stat-reorders"
-    ).innerText =
-        reorderSuggestions.length;
-
-
-    const urgent =
-        rows.filter(
-            row =>
-                row.projected < 0
-        );
-
-
-    const summary =
-        document.getElementById(
-            "monitoring-summary"
-        );
-
-
-    if (urgent.length) {
-
-        summary.innerHTML = `
-
-            <div class="notice">
-
-                <strong>
-                    Immediate attention:
-                </strong>
-
-                ${urgent
-                    .map(
-                        row =>
-                            `${row.name}
-                            (${row.projected}
-                            projected)`
-                    )
-                    .join(", ")}.
-
-            </div>
-
-        `;
-
-    } else {
-
-        summary.innerHTML = `
-
-            <div
-                class="
-                    badge
-                    badge-green
-                "
-            >
-
-                Forecast currently shows
-                sufficient stock for
-                scheduled demand.
-
-            </div>
-
-        `;
-
-    }
-
-}
-
-
-/* =====================================================
-   RENDER BOM TABLE
-===================================================== */
-
-function renderBom() {
-
-    const tbody =
-        document.getElementById(
-            "bom-tbody"
-        );
-
-
-    const rows = [];
-
-
-    Object.entries(
-        bom
-    ).forEach(
-        ([procedure, materials]) => {
-
-            Object.entries(
-                materials
-            ).forEach(
-                ([material, quantity]) => {
-
-                    rows.push(`
-
-                        <tr>
-
-                            <td>
-                                ${procedure}
-                            </td>
-
-                            <td>
-                                ${material}
-                            </td>
-
-                            <td>
-                                ${quantity}
-                            </td>
-
-                        </tr>
-
-                    `);
-
-                }
-            );
-
-        }
-    );
-
-
-    tbody.innerHTML =
-        rows.join("");
-
-}
-
-
-/* =====================================================
-   UPDATE EVERYTHING
-===================================================== */
-
-function updateAll() {
-
-    updateAppointments();
-
+  if(name==="inventory")
     renderInventory();
 
-    renderBom();
-
-    updateStats();
-
+  if(name==="forecast")
+    renderForecast();
 }
 
 
-/* =====================================================
-   INITIALIZE SYSTEM
-===================================================== */
+/* ================= DASHBOARD ================= */
 
-updateAll();
+function renderDashboard(){
+
+  syncQueue();
+
+  document.getElementById("statAppointments")
+    .textContent=appointments.length;
+
+  document.getElementById("statQueue")
+    .textContent=queue.filter(
+      q=>q.status==="Waiting"
+    ).length;
+
+  document.getElementById("statInventory")
+    .textContent=inventory.length;
+
+  document.getElementById("statAlerts")
+    .textContent=countForecastAlerts();
+}
+
+
+/* ================= APPOINTMENT MANAGEMENT ================= */
+
+function renderAppointments(){
+
+  document.getElementById("appointmentTable").innerHTML=`
+
+  <table class="admin-table">
+
+    <tr>
+      <th>Patient</th>
+      <th>Procedure</th>
+      <th>Date</th>
+      <th>Status</th>
+      <th>Action</th>
+    </tr>
+
+    ${appointments.map(a=>`
+
+      <tr>
+
+        <td>${a.name}</td>
+
+        <td>${a.service}</td>
+
+        <td>${a.date}</td>
+
+        <td>${a.status}</td>
+
+        <td>
+
+          ${
+            a.status==="Pending"
+            ? `<button onclick="approve(${a.id})">
+                 Approve
+               </button>`
+            : a.status
+          }
+
+        </td>
+
+      </tr>
+
+    `).join("")}
+
+  </table>`;
+}
+
+function approve(id){
+
+  let a=appointments.find(x=>x.id===id);
+
+  if(!a)return;
+
+  a.status="Approved";
+
+  syncQueue();
+
+  renderAppointments();
+
+  renderDashboard();
+}
+
+
+/* ================= QUEUE MANAGEMENT ================= */
+
+function renderAdminQueue(){
+
+  syncQueue();
+
+  document.getElementById("adminQueue").innerHTML=
+
+  `<table class="admin-table">
+
+    <tr>
+      <th>Queue No.</th>
+      <th>Patient</th>
+      <th>Procedure</th>
+      <th>Status</th>
+      <th>Action</th>
+    </tr>
+
+    ${queue.map(q=>`
+
+      <tr>
+
+        <td>${q.id}</td>
+
+        <td>${q.name}</td>
+
+        <td>${q.service}</td>
+
+        <td>${q.status}</td>
+
+        <td>
+
+        ${
+          q.status==="Waiting"
+          ? `<button onclick="serve('${q.id}')">
+               Serve
+             </button>`
+          : q.status==="Serving"
+          ? `<button onclick="complete('${q.id}')">
+               Complete
+             </button>`
+          : "Completed"
+        }
+
+        </td>
+
+      </tr>
+
+    `).join("")}
+
+  </table>`;
+}
+
+function serve(id){
+
+  queue.forEach(q=>{
+    if(q.status==="Serving")
+      q.status="Completed";
+  });
+
+  let q=queue.find(x=>x.id===id);
+
+  if(!q)return;
+
+  q.status="Serving";
+
+  let a=appointments.find(
+    x=>x.id===q.appointmentId
+  );
+
+  if(a)
+    a.status="Serving";
+
+  renderAdminQueue();
+  renderDashboard();
+  renderQueue();
+}
+
+function complete(id){
+
+  let q=queue.find(x=>x.id===id);
+
+  if(!q)return;
+
+  q.status="Completed";
+
+  let a=appointments.find(
+    x=>x.id===q.appointmentId
+  );
+
+  if(a){
+
+    a.status="Completed";
+
+    consumeMaterials(a.service);
+  }
+
+  renderAdminQueue();
+  renderDashboard();
+  renderInventory();
+}
+
+
+/* ================= PATIENTS ================= */
+
+function renderPatients(){
+
+  let unique=[];
+
+  appointments.forEach(a=>{
+
+    if(!unique.some(x=>x.name===a.name))
+      unique.push(a);
+
+  });
+
+  document.getElementById("patientTable").innerHTML=`
+
+  <table class="admin-table">
+
+    <tr>
+      <th>Patient</th>
+      <th>Phone</th>
+      <th>Last Procedure</th>
+      <th>Status</th>
+    </tr>
+
+    ${unique.map(p=>`
+
+      <tr>
+        <td>${p.name}</td>
+        <td>${p.phone}</td>
+        <td>${p.service}</td>
+        <td>${p.status}</td>
+      </tr>
+
+    `).join("")}
+
+  </table>`;
+}
+
+
+/* ================= INVENTORY ================= */
+
+function renderInventory(){
+
+  document.getElementById("inventoryTable").innerHTML=`
+
+  <table class="admin-table">
+
+    <tr>
+      <th>Material</th>
+      <th>On Hand</th>
+      <th>Threshold</th>
+      <th>Lead Time</th>
+      <th>Supplier</th>
+    </tr>
+
+    ${inventory.map(i=>`
+
+      <tr>
+
+        <td>${i.name}</td>
+
+        <td>${i.stock} ${i.unit}</td>
+
+        <td>${i.threshold}</td>
+
+        <td>${i.lead} days</td>
+
+        <td>${i.supplier}</td>
+
+      </tr>
+
+    `).join("")}
+
+  </table>`;
+}
+
+
+/* ================= PREDICTIVE FORECAST ================= */
+
+/*
+  The forecast uses:
+
+  Scheduled appointments
+  + Procedure BOM
+  + Current inventory
+  + Supplier lead time
+  + Safety threshold
+*/
+
+function calculateForecast(days){
+
+  let end=dateLimit(days);
+
+  let upcoming=appointments.filter(a=>{
+
+    if(a.status==="Completed")
+      return false;
+
+    let d=new Date(a.date);
+
+    return d>=new Date() && d<=end;
+  });
+
+  return inventory.map(item=>{
+
+    let demand=0;
+
+    upcoming.forEach(a=>{
+
+      let materials=BOM[a.service];
+
+      if(materials && materials[item.name])
+        demand+=materials[item.name];
+    });
+
+    let projected=item.stock-demand;
+
+    let reorder=0;
+
+    if(projected<item.threshold){
+
+      reorder=
+        Math.max(
+          item.threshold-projected,
+          demand
+        );
+    }
+
+    return{
+      ...item,
+      demand,
+      projected,
+      reorder
+    };
+  });
+}
+
+function renderForecast(){
+
+  let days=parseInt(
+    document.getElementById("forecastDays").value
+  );
+
+  let results=calculateForecast(days);
+
+  document.getElementById("forecastResults").innerHTML=
+
+  results.map(r=>{
+
+    let danger=r.projected<0;
+    let warning=r.projected<r.threshold;
+
+    let cls=danger
+      ? "danger"
+      : warning
+      ? "warning"
+      : "";
+
+    return`
+
+      <div class="forecast-card ${cls}">
+
+        <h4>${r.name}</h4>
+
+        <div class="forecast-grid">
+
+          <div>
+            <small>Current Stock</small>
+            <strong>${r.stock}</strong>
+          </div>
+
+          <div>
+            <small>Projected Usage</small>
+            <strong>${r.demand}</strong>
+          </div>
+
+          <div>
+            <small>Projected Stock</small>
+            <strong>${r.projected}</strong>
+          </div>
+
+          <div>
+            <small>Lead Time</small>
+            <strong>${r.lead} days</strong>
+          </div>
+
+        </div>
+
+        ${
+          danger
+          ? `
+          <div class="reorder">
+
+            <strong>
+              ⚠ Insufficient supplies for future demand.
+            </strong>
+
+            <p>
+              Scheduled procedures may exhaust
+              ${r.name} before the next delivery.
+            </p>
+
+            <button onclick="reorder('${r.name}',${r.reorder})">
+              Generate Reorder Request
+            </button>
+
+          </div>
+          `
+          : warning
+          ? `
+          <div class="reorder">
+
+            <strong>
+              ⚠ Restock recommended.
+            </strong>
+
+            <p>
+              Projected inventory will fall below
+              the safety threshold.
+            </p>
+
+            <button onclick="reorder('${r.name}',${r.reorder})">
+              Generate Reorder Request
+            </button>
+
+          </div>
+          `
+          : `
+          <div class="reorder"
+               style="background:#d4edda;color:#155724">
+
+            ✓ Inventory is sufficient for
+            projected demand.
+
+          </div>
+          `
+        }
+
+      </div>
+
+    `;
+
+  }).join("");
+}
+
+
+/* ================= REORDER ================= */
+
+function reorder(name,quantity){
+
+  let item=inventory.find(x=>x.name===name);
+
+  if(!item)return;
+
+  alert(
+    "REORDER REQUEST GENERATED\n\n"+
+    "Material: "+name+"\n"+
+    "Quantity: "+quantity+" "+item.unit+"\n"+
+    "Supplier: "+item.supplier+"\n"+
+    "Lead Time: "+item.lead+" days"
+  );
+}
+
+
+/* ================= INTEGRITY LOOP ================= */
+
+/*
+  When a procedure is completed,
+  its BOM materials are automatically deducted.
+*/
+
+function consumeMaterials(service){
+
+  let materials=BOM[service];
+
+  if(!materials)return;
+
+  Object.keys(materials).forEach(name=>{
+
+    let item=inventory.find(
+      x=>x.name===name
+    );
+
+    if(item)
+      item.stock-=materials[name];
+
+  });
+}
+
+
+/*
+  Manual adjustment for unexpected consumption.
+*/
+
+function quickAdjust(name,amount){
+
+  let item=inventory.find(
+    x=>x.name===name
+  );
+
+  if(!item)return;
+
+  item.stock+=amount;
+
+  renderInventory();
+  renderForecast();
+}
+
+
+/* ================= ALERT COUNT ================= */
+
+function countForecastAlerts(){
+
+  return calculateForecast(30)
+    .filter(x=>x.projected<x.threshold)
+    .length;
+}
+
+
+/* ================= START ================= */
+
+document.getElementById("year").textContent=
+  new Date().getFullYear();
+
+document.getElementById("date").min=
+  new Date().toISOString().split("T")[0];
+
+syncQueue();
