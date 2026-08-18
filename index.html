@@ -2,408 +2,791 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>Pecaña Dental Clinic Management System</title>
-<link rel="stylesheet"
-href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 <link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 </head>
-
 <body>
 
-<header>
-  <div class="logo" onclick="page('home')">
-    PECAÑA <span>DENTAL</span>
-  </div>
+<!-- ================= PUBLIC WEBSITE ================= -->
+<div id="publicApp">
 
-  <nav>
-    <a onclick="page('home')">Home</a>
-    <a onclick="page('services')">Services</a>
-    <a onclick="page('appointment')">Appointment</a>
-    <a onclick="page('queue')">Queue Status</a>
-    <a onclick="page('patient')">Patient Information</a>
-    <button onclick="openLogin()">Admin Login</button>
-  </nav>
+<header class="public-header">
+    <div class="public-logo" onclick="showPublicPage('home')">
+        <i class="fa-solid fa-tooth"></i> PECAÑA DENTAL
+    </div>
+
+    <nav>
+        <button onclick="showPublicPage('home')">Home</button>
+        <button onclick="showPublicPage('services')">Services</button>
+        <button onclick="showPublicPage('appointment')">Appointment</button>
+        <button onclick="showPublicPage('queue-status')">Queue Status</button>
+        <button onclick="showPublicPage('patient-info')">Patient Information</button>
+        <button class="staff-btn" onclick="showLogin()">Staff Login</button>
+    </nav>
 </header>
 
-<main>
-
 <!-- HOME -->
-<section id="home" class="page active">
-  <div class="hero">
-    <span>Integrated Dental Clinic Management</span>
-    <h1>Healthy Smiles,<br>Better Management.</h1>
-    <p>
-      Manage appointments, patient queues, inventory,
-      dental procedures and predictive restocking in one system.
-    </p>
+<section id="public-home" class="public-page active">
+    <div class="hero">
+        <div>
+            <span class="eyebrow">TRUSTED DENTAL CARE SINCE DAY ONE</span>
+            <h1>Pecaña<br><span>Dental Clinic</span></h1>
+            <p>
+                Pecaña Dental Clinic Management System provides organized
+                appointment scheduling, separate patient queues, digital
+                patient records, and predictive inventory monitoring.
+            </p>
 
-    <div class="buttons">
-      <button onclick="page('appointment')">Book Appointment</button>
-      <button class="outline" onclick="page('services')">View Services</button>
-    </div>
-  </div>
+            <div class="hero-buttons">
+                <button class="btn-primary" onclick="showPublicPage('appointment')">
+                    <i class="fa-solid fa-calendar-plus"></i> Book Appointment
+                </button>
+                <button class="btn-outline" onclick="showPublicPage('services')">
+                    View Services
+                </button>
+            </div>
+        </div>
 
-  <div class="cards">
-    <div>
-      <i class="fa-solid fa-calendar-check"></i>
-      <h3>Appointments</h3>
-      <p>Schedule and manage dental appointments.</p>
-    </div>
-
-    <div>
-      <i class="fa-solid fa-users"></i>
-      <h3>Queue Management</h3>
-      <p>Monitor waiting and serving patients.</p>
+        <div class="hero-card">
+            <i class="fa-solid fa-tooth"></i>
+            <h2>Your Smile Matters</h2>
+            <p>Simple, organized and patient-centered dental care.</p>
+        </div>
     </div>
 
-    <div>
-      <i class="fa-solid fa-boxes-stacked"></i>
-      <h3>Smart Inventory</h3>
-      <p>Forecast future material requirements.</p>
+    <div class="stats">
+        <div><strong>5+</strong><span>Core Services</span></div>
+        <div><strong id="publicPatientCount">0</strong><span>Registered Patients</span></div>
+        <div><strong id="publicAppointmentCount">0</strong><span>Appointments</span></div>
+        <div><strong>1</strong><span>Trusted Clinic</span></div>
     </div>
-  </div>
+
+    <div class="section-title">
+        <span>WHAT WE OFFER</span>
+        <h2>Our Services</h2>
+    </div>
+
+    <div class="service-grid">
+        <div class="service-card">
+            <i class="fa-solid fa-tooth"></i>
+            <h3>Dental Check-up</h3>
+            <p>Routine oral examination and assessment.</p>
+        </div>
+        <div class="service-card">
+            <i class="fa-solid fa-sparkles"></i>
+            <h3>Dental Cleaning</h3>
+            <p>Professional cleaning and preventive care.</p>
+        </div>
+        <div class="service-card">
+            <i class="fa-solid fa-tooth"></i>
+            <h3>Tooth Restoration</h3>
+            <p>Restorative procedures for damaged teeth.</p>
+        </div>
+        <div class="service-card">
+            <i class="fa-solid fa-teeth"></i>
+            <h3>Tooth Extraction</h3>
+            <p>Safe and professionally managed extraction.</p>
+        </div>
+    </div>
 </section>
-
 
 <!-- SERVICES -->
-<section id="services" class="page">
-  <h2>Dental Services</h2>
-  <p class="subtitle">Select a service to book an appointment.</p>
-
-  <div class="service-grid">
-
-    <div class="service" onclick="book('Cleaning')">
-      <i class="fa-solid fa-tooth"></i>
-      <h3>Dental Cleaning</h3>
-      <p>Professional cleaning and preventive care.</p>
+<section id="public-services" class="public-page">
+    <div class="public-title">
+        <span>OUR SERVICES</span>
+        <h1>Dental Services</h1>
+        <p>Select a service to continue with an appointment.</p>
     </div>
 
-    <div class="service" onclick="book('Extraction')">
-      <i class="fa-solid fa-tooth"></i>
-      <h3>Tooth Extraction</h3>
-      <p>Safe removal of problematic teeth.</p>
-    </div>
+    <div class="service-grid large">
+        <div class="service-card">
+            <i class="fa-solid fa-tooth"></i>
+            <h3>Dental Check-up</h3>
+            <p>Complete dental examination.</p>
+            <button onclick="selectService('Dental Check-up')">Book This Service</button>
+        </div>
 
-    <div class="service" onclick="book('Filling')">
-      <i class="fa-solid fa-tooth"></i>
-      <h3>Dental Filling</h3>
-      <p>Restoration of damaged or decayed teeth.</p>
-    </div>
+        <div class="service-card">
+            <i class="fa-solid fa-sparkles"></i>
+            <h3>Dental Cleaning</h3>
+            <p>Professional preventive cleaning.</p>
+            <button onclick="selectService('Dental Cleaning')">Book This Service</button>
+        </div>
 
-    <div class="service" onclick="book('Root Canal')">
-      <i class="fa-solid fa-tooth"></i>
-      <h3>Root Canal</h3>
-      <p>Treatment for infected dental pulp.</p>
-    </div>
+        <div class="service-card">
+            <i class="fa-solid fa-tooth"></i>
+            <h3>Tooth Restoration</h3>
+            <p>Restoration for damaged teeth.</p>
+            <button onclick="selectService('Tooth Restoration')">Book This Service</button>
+        </div>
 
-  </div>
+        <div class="service-card">
+            <i class="fa-solid fa-teeth"></i>
+            <h3>Tooth Extraction</h3>
+            <p>Professional tooth extraction.</p>
+            <button onclick="selectService('Tooth Extraction')">Book This Service</button>
+        </div>
+    </div>
 </section>
-
 
 <!-- APPOINTMENT -->
-<section id="appointment" class="page">
-  <h2>Book an Appointment</h2>
+<section id="public-appointment" class="public-page">
+    <div class="form-page">
+        <div class="public-title">
+            <span>APPOINTMENT</span>
+            <h1>Book an Appointment</h1>
+            <p>Provide your information and preferred schedule.</p>
+        </div>
 
-  <form onsubmit="addAppointment(event)">
+        <form id="appointmentForm" class="form-card">
+            <div class="form-grid">
+                <div>
+                    <label>Full Name</label>
+                    <input id="bookingName" required>
+                </div>
 
-    <input id="name" placeholder="Full Name" required>
+                <div>
+                    <label>Contact Number</label>
+                    <input id="bookingContact" required>
+                </div>
 
-    <input id="phone" placeholder="Phone Number" required>
+                <div>
+                    <label>Date</label>
+                    <input type="date" id="bookingDate" required>
+                </div>
 
-    <select id="service" required>
-      <option value="">Select Procedure</option>
-      <option>Cleaning</option>
-      <option>Extraction</option>
-      <option>Filling</option>
-      <option>Root Canal</option>
-    </select>
+                <div>
+                    <label>Time</label>
+                    <input type="time" id="bookingTime" required>
+                </div>
 
-    <input id="date" type="date" required>
+                <div class="full">
+                    <label>Dental Service</label>
+                    <select id="bookingService" required>
+                        <option value="">Select service</option>
+                        <option>Dental Check-up</option>
+                        <option>Dental Cleaning</option>
+                        <option>Tooth Restoration</option>
+                        <option>Tooth Extraction</option>
+                    </select>
+                </div>
 
-    <button type="submit">
-      Submit Appointment
-    </button>
+                <div class="full">
+                    <label>Dental Concern</label>
+                    <textarea id="bookingConcern" placeholder="Briefly describe your concern"></textarea>
+                </div>
+            </div>
 
-  </form>
-
-  <div id="appointmentMessage"></div>
+            <button class="btn-primary" type="submit">
+                Submit Appointment
+            </button>
+        </form>
+    </div>
 </section>
 
-
-<!-- QUEUE -->
-<section id="queue" class="page">
-  <h2>Queue Status</h2>
-
-  <div id="currentQueue" class="queue-main"></div>
-
-  <h3>Waiting Patients</h3>
-
-  <div id="queueList"></div>
-</section>
-
-
-<!-- PATIENT INFORMATION -->
-<section id="patient" class="page">
-  <h2>Patient Information</h2>
-
-  <div class="info">
-    <i class="fa-solid fa-user"></i>
-
-    <h3>Patient Queue System</h3>
-
-    <p>
-      Approved appointments automatically enter the
-      waiting queue. Patients can monitor their
-      current queue status.
-    </p>
-  </div>
-</section>
-
-</main>
-
-
-<!-- ================= ADMIN LOGIN ================= -->
-
-<div id="loginModal" class="modal">
-
-  <div class="login-box">
-
-    <button class="close" onclick="closeLogin()">×</button>
-
-    <div class="login-icon">
-      <i class="fa-solid fa-user-shield"></i>
+<!-- QUEUE STATUS -->
+<section id="public-queue-status" class="public-page">
+    <div class="public-title">
+        <span>QUEUE STATUS</span>
+        <h1>Today's Queue</h1>
+        <p>Appointment and walk-in queues remain completely separate.</p>
     </div>
 
-    <h2>Admin Login</h2>
-    <p>Sign in to the clinic management system.</p>
+    <div class="queue-grid">
+        <div class="public-queue-card">
+            <h2><i class="fa-solid fa-calendar-check"></i> Appointment Queue</h2>
+            <div id="publicAppointmentQueue"></div>
+        </div>
 
-    <input id="adminUser" placeholder="Username">
+        <div class="public-queue-card">
+            <h2><i class="fa-solid fa-person-walking"></i> Walk-In Queue</h2>
+            <div id="publicWalkinQueue"></div>
+        </div>
+    </div>
+</section>
 
-    <input id="adminPass" type="password" placeholder="Password">
+<!-- PATIENT INFORMATION -->
+<section id="public-patient-info" class="public-page">
+    <div class="public-title">
+        <span>PATIENT INFORMATION</span>
+        <h1>Patient Services</h1>
+        <p>Information about appointments, queues and clinic services.</p>
+    </div>
 
-    <button onclick="adminLogin()">
-      <i class="fa-solid fa-right-to-bracket"></i>
-      Login
-    </button>
-
-    <div id="loginError"></div>
-
-  </div>
+    <div class="info-box">
+        <i class="fa-solid fa-circle-info"></i>
+        <h2>Need Assistance?</h2>
+        <p>
+            Please contact clinic staff for assistance with appointments,
+            queue status and patient information.
+        </p>
+        <button class="btn-primary" onclick="showPublicPage('appointment')">
+            Book an Appointment
+        </button>
+    </div>
+</section>
 
 </div>
 
+<!-- ================= LOGIN ================= -->
+
+<div id="loginPage" class="login-page hidden">
+    <div class="login-card">
+        <div class="login-logo"><i class="fa-solid fa-tooth"></i></div>
+        <h1>Staff Login</h1>
+        <p>Pecaña Dental Clinic Management System</p>
+
+        <form id="loginForm">
+            <label>Username</label>
+            <input id="loginUsername" required>
+
+            <label>Password</label>
+            <input id="loginPassword" type="password" required>
+
+            <button class="btn-primary">Login</button>
+
+            <button type="button" class="back-link" onclick="showPublicSite()">
+                Back to Website
+            </button>
+        </form>
+    </div>
+</div>
 
 <!-- ================= ADMIN SYSTEM ================= -->
 
-<div id="adminPanel" class="admin-panel">
+<div id="adminApp" class="admin-app hidden">
 
-  <aside>
+<aside class="sidebar">
 
-    <div class="admin-logo">
-      <i class="fa-solid fa-tooth"></i>
-      <div>
-        <strong>PECAÑA</strong>
-        <small>ADMIN SYSTEM</small>
-      </div>
+    <div class="sidebar-brand">
+        <i class="fa-solid fa-tooth"></i>
+        <div>
+            <strong>PECAÑA DENTAL</strong>
+            <small>STAFF SYSTEM</small>
+        </div>
     </div>
 
-    <a onclick="adminPage('dashboard')">
-      <i class="fa-solid fa-chart-line"></i> Dashboard
-    </a>
+    <div class="side-section">MANAGEMENT</div>
 
-    <a onclick="adminPage('appointments')">
-      <i class="fa-solid fa-calendar-check"></i> Appointments
-    </a>
+    <button class="side-link active" data-page="dashboard">
+        <i class="fa-solid fa-chart-line"></i>
+        <span>Dashboard</span>
+    </button>
 
-    <a onclick="adminPage('queueAdmin')">
-      <i class="fa-solid fa-users"></i> Queue Management
-    </a>
+    <button class="side-link" data-page="appointments">
+        <i class="fa-solid fa-calendar-check"></i>
+        <span>Appointment<br>Management</span>
+    </button>
 
-    <a onclick="adminPage('patients')">
-      <i class="fa-solid fa-user-group"></i> Patients
-    </a>
+    <button class="side-link" data-page="appointmentQueue">
+        <i class="fa-solid fa-list-ol"></i>
+        <span>Appointment Queue</span>
+    </button>
 
-    <a onclick="adminPage('inventory')">
-      <i class="fa-solid fa-boxes-stacked"></i> Inventory
-    </a>
+    <button class="side-link" data-page="walkinQueue">
+        <i class="fa-solid fa-person-walking"></i>
+        <span>Walk-In Queue</span>
+    </button>
 
-    <a onclick="adminPage('forecast')">
-      <i class="fa-solid fa-chart-column"></i> Restock Forecast
-    </a>
+    <button class="side-link" data-page="patients">
+        <i class="fa-solid fa-users"></i>
+        <span>Patient Records</span>
+    </button>
 
-    <a onclick="adminPage('reports')">
-      <i class="fa-solid fa-file-lines"></i> Reports
-    </a>
+    <button class="side-link" data-page="addPatient">
+        <i class="fa-solid fa-user-plus"></i>
+        <span>Add Patient</span>
+    </button>
 
-    <a onclick="logoutAdmin()" class="logout">
-      <i class="fa-solid fa-right-from-bracket"></i> Logout
-    </a>
+    <button class="side-link" data-page="schedule">
+        <i class="fa-solid fa-calendar-days"></i>
+        <span>Daily Schedule</span>
+    </button>
 
-  </aside>
+    <div class="side-section">SYSTEM</div>
 
+    <button class="side-link" data-page="inventory">
+        <i class="fa-solid fa-boxes-stacked"></i>
+        <span>Inventory</span>
+    </button>
 
-  <div class="admin-content">
+    <button class="side-link" data-page="forecast">
+        <i class="fa-solid fa-chart-column"></i>
+        <span>Restock Forecast</span>
+    </button>
 
-    <div class="admin-top">
-      <div>
-        <h2 id="adminTitle">Dashboard</h2>
+    <button class="side-link" data-page="reports">
+        <i class="fa-solid fa-file-lines"></i>
+        <span>Reports</span>
+    </button>
+
+    <button class="side-link logout" onclick="logout()">
+        <i class="fa-solid fa-right-from-bracket"></i>
+        <span>Logout</span>
+    </button>
+</aside>
+
+<main class="admin-main">
+
+<header class="admin-header">
+    <div>
+        <h1 id="pageTitle">Dashboard</h1>
         <p>Pecaña Dental Clinic Management System</p>
-      </div>
+    </div>
 
-      <span>
+    <div class="admin-user">
         <i class="fa-solid fa-user-shield"></i>
         Administrator
-      </span>
+    </div>
+</header>
+
+<!-- DASHBOARD -->
+<section id="page-dashboard" class="admin-page active">
+
+    <div class="dashboard-cards">
+        <div class="stat-card">
+            <i class="fa-solid fa-calendar-day"></i>
+            <strong id="statAppointments">0</strong>
+            <span>Today's Appointments</span>
+        </div>
+
+        <div class="stat-card">
+            <i class="fa-solid fa-calendar-check"></i>
+            <strong id="statWaitingAppointments">0</strong>
+            <span>Waiting Appointment Patients</span>
+        </div>
+
+        <div class="stat-card">
+            <i class="fa-solid fa-person-walking"></i>
+            <strong id="statWaitingWalkins">0</strong>
+            <span>Waiting Walk-Ins</span>
+        </div>
+
+        <div class="stat-card">
+            <i class="fa-solid fa-user-doctor"></i>
+            <strong id="statServing">None</strong>
+            <span>Currently Serving</span>
+        </div>
+
+        <div class="stat-card">
+            <i class="fa-solid fa-users"></i>
+            <strong id="statPatients">0</strong>
+            <span>Registered Patients</span>
+        </div>
     </div>
 
+    <div class="content-card">
+        <h2>Quick Access</h2>
 
-    <!-- DASHBOARD -->
+        <div class="quick-grid">
+            <button onclick="openAdminPage('appointments')">
+                <i class="fa-solid fa-calendar-check"></i>
+                Appointment Management
+            </button>
 
-    <div id="dashboard" class="admin-page active">
+            <button onclick="openAdminPage('appointmentQueue')">
+                <i class="fa-solid fa-list-ol"></i>
+                Appointment Queue
+            </button>
 
-      <div class="stats">
+            <button onclick="openAdminPage('walkinQueue')">
+                <i class="fa-solid fa-person-walking"></i>
+                Walk-In Queue
+            </button>
 
+            <button onclick="openAdminPage('patients')">
+                <i class="fa-solid fa-users"></i>
+                Patient Records
+            </button>
+
+            <button onclick="openAdminPage('addPatient')">
+                <i class="fa-solid fa-user-plus"></i>
+                Add Patient
+            </button>
+
+            <button onclick="openAdminPage('schedule')">
+                <i class="fa-solid fa-calendar-days"></i>
+                Daily Schedule
+            </button>
+        </div>
+    </div>
+
+    <div class="forecast-banner">
         <div>
-          <i class="fa-solid fa-calendar"></i>
-          <strong id="statAppointments">0</strong>
-          <span>Appointments</span>
+            <i class="fa-solid fa-boxes-stacked"></i>
+            <div>
+                <strong>Inventory Forecast</strong>
+                <span id="forecastSummary">Inventory is sufficient.</span>
+            </div>
+        </div>
+
+        <button onclick="openAdminPage('forecast')">View Forecast</button>
+    </div>
+
+</section>
+
+<!-- APPOINTMENT MANAGEMENT -->
+<section id="page-appointments" class="admin-page">
+
+    <div class="page-actions">
+        <div>
+            <h2>Appointment Management</h2>
+            <p>Manage scheduled dental appointments.</p>
+        </div>
+
+        <button class="btn-primary" onclick="openAdminPage('addAppointment')">
+            <i class="fa-solid fa-plus"></i> Create Appointment
+        </button>
+    </div>
+
+    <div class="content-card table-card">
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Patient</th>
+                        <th>Date</th>
+                        <th>Time</th>
+                        <th>Service</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="appointmentTable"></tbody>
+            </table>
+        </div>
+    </div>
+</section>
+
+<!-- CREATE APPOINTMENT -->
+<section id="page-addAppointment" class="admin-page">
+
+    <div class="page-actions">
+        <div>
+            <h2>Create Appointment</h2>
+            <p>Create an appointment for an existing patient.</p>
+        </div>
+    </div>
+
+    <form id="adminAppointmentForm" class="content-card form-grid admin-form">
+
+        <div class="full">
+            <label>Patient</label>
+            <select id="adminAppointmentPatient" required></select>
         </div>
 
         <div>
-          <i class="fa-solid fa-users"></i>
-          <strong id="statQueue">0</strong>
-          <span>Waiting Patients</span>
+            <label>Date</label>
+            <input type="date" id="adminAppointmentDate" required>
         </div>
 
         <div>
-          <i class="fa-solid fa-box"></i>
-          <strong id="statInventory">0</strong>
-          <span>Inventory Items</span>
+            <label>Time</label>
+            <input type="time" id="adminAppointmentTime" required>
+        </div>
+
+        <div class="full">
+            <label>Dental Service</label>
+            <select id="adminAppointmentService" required>
+                <option>Dental Check-up</option>
+                <option>Dental Cleaning</option>
+                <option>Tooth Restoration</option>
+                <option>Tooth Extraction</option>
+            </select>
+        </div>
+
+        <div class="full form-buttons">
+            <button class="btn-primary">Create Appointment</button>
+            <button type="button" class="btn-outline" onclick="openAdminPage('appointments')">Cancel</button>
+        </div>
+    </form>
+</section>
+
+<!-- APPOINTMENT QUEUE -->
+<section id="page-appointmentQueue" class="admin-page">
+
+    <div class="page-actions">
+        <div>
+            <h2>Appointment Queue</h2>
+            <p>Approved scheduled appointments only.</p>
+        </div>
+    </div>
+
+    <div class="queue-info">
+        <i class="fa-solid fa-calendar-check"></i>
+        Appointment queue numbers use <strong>A001, A002, A003...</strong>
+    </div>
+
+    <div id="appointmentQueueContainer"></div>
+</section>
+
+<!-- WALK-IN QUEUE -->
+<section id="page-walkinQueue" class="admin-page">
+
+    <div class="page-actions">
+        <div>
+            <h2>Walk-In Queue</h2>
+            <p>Patients without scheduled appointments.</p>
+        </div>
+
+        <button class="btn-primary" onclick="openWalkinModal()">
+            <i class="fa-solid fa-user-plus"></i> Add Walk-In
+        </button>
+    </div>
+
+    <div class="queue-info">
+        <i class="fa-solid fa-person-walking"></i>
+        Walk-in queue numbers use <strong>W001, W002, W003...</strong>
+    </div>
+
+    <div id="walkinQueueContainer"></div>
+</section>
+
+<!-- PATIENT RECORDS -->
+<section id="page-patients" class="admin-page">
+
+    <div class="page-actions">
+        <div>
+            <h2>Patient Records</h2>
+            <p>Manage registered clinic patients.</p>
+        </div>
+
+        <button class="btn-primary" onclick="openAdminPage('addPatient')">
+            <i class="fa-solid fa-user-plus"></i> Add Patient
+        </button>
+    </div>
+
+    <div class="content-card table-card">
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Patient Name</th>
+                        <th>Contact</th>
+                        <th>DOB</th>
+                        <th>Concern</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="patientTable"></tbody>
+            </table>
+        </div>
+    </div>
+</section>
+
+<!-- ADD PATIENT -->
+<section id="page-addPatient" class="admin-page">
+
+    <div class="page-actions">
+        <div>
+            <h2>Add Patient</h2>
+            <p>Register a new patient.</p>
+        </div>
+    </div>
+
+    <form id="patientForm" class="content-card form-grid admin-form">
+
+        <div>
+            <label>Full Name</label>
+            <input id="patientName" required>
         </div>
 
         <div>
-          <i class="fa-solid fa-triangle-exclamation"></i>
-          <strong id="statAlerts">0</strong>
-          <span>Restock Alerts</span>
-        </div>
-
-      </div>
-
-      <div class="dashboard-box">
-        <h3>System Overview</h3>
-        <p>
-          The predictive inventory module analyzes approved
-          appointments and expected procedure consumption
-          to identify future supply shortages.
-        </p>
-      </div>
-
-    </div>
-
-
-    <!-- APPOINTMENTS -->
-
-    <div id="appointments" class="admin-page">
-
-      <div id="appointmentTable"></div>
-
-    </div>
-
-
-    <!-- QUEUE MANAGEMENT -->
-
-    <div id="queueAdmin" class="admin-page">
-
-      <div id="adminQueue"></div>
-
-    </div>
-
-
-    <!-- PATIENTS -->
-
-    <div id="patients" class="admin-page">
-
-      <div id="patientTable"></div>
-
-    </div>
-
-
-    <!-- INVENTORY -->
-
-    <div id="inventory" class="admin-page">
-
-      <p class="muted">
-        Monitor current stock, thresholds and projected consumption.
-      </p>
-
-      <div id="inventoryTable"></div>
-
-    </div>
-
-
-    <!-- FORECAST -->
-
-    <div id="forecast" class="admin-page">
-
-      <div class="forecast-head">
-        <div>
-          <p>
-            Appointment-driven supply demand forecasting.
-          </p>
-        </div>
-
-        <select id="forecastDays" onchange="renderForecast()">
-          <option value="7">Next 7 Days</option>
-          <option value="14">Next 14 Days</option>
-          <option value="30">Next 30 Days</option>
-        </select>
-      </div>
-
-      <div id="forecastResults"></div>
-
-    </div>
-
-
-    <!-- REPORTS -->
-
-    <div id="reports" class="admin-page">
-
-
-
-      <div class="report-grid">
-
-        <div>
-          <i class="fa-solid fa-calendar-days"></i>
-          <h4>Appointment Report</h4>
-          <p>Review scheduled and completed appointments.</p>
+            <label>Contact Number</label>
+            <input id="patientContact" required>
         </div>
 
         <div>
-          <i class="fa-solid fa-users"></i>
-          <h4>Queue Report</h4>
-          <p>Review patient queue activity.</p>
+            <label>Date of Birth</label>
+            <input type="date" id="patientDOB">
         </div>
 
         <div>
-          <i class="fa-solid fa-boxes-stacked"></i>
-          <h4>Inventory Report</h4>
-          <p>Review stock and projected material demand.</p>
+            <label>Gender</label>
+            <select id="patientGender">
+                <option value="">Select</option>
+                <option>Male</option>
+                <option>Female</option>
+                <option>Other</option>
+            </select>
         </div>
 
-      </div>
+        <div class="full">
+            <label>Address</label>
+            <input id="patientAddress">
+        </div>
 
+        <div>
+            <label>Emergency Contact</label>
+            <input id="patientEmergency">
+        </div>
+
+        <div>
+            <label>Dental Concern</label>
+            <input id="patientConcern">
+        </div>
+
+        <div class="full form-buttons">
+            <button class="btn-primary">Save Patient</button>
+            <button type="button" class="btn-outline" onclick="openAdminPage('patients')">Cancel</button>
+        </div>
+    </form>
+</section>
+
+<!-- DAILY SCHEDULE -->
+<section id="page-schedule" class="admin-page">
+
+    <div class="page-actions">
+        <div>
+            <h2>Daily Schedule</h2>
+            <p>Unified schedule for appointments and walk-ins.</p>
+        </div>
     </div>
 
-  </div>
+    <div class="content-card table-card">
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Time</th>
+                        <th>Patient</th>
+                        <th>Type</th>
+                        <th>Service</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody id="scheduleTable"></tbody>
+            </table>
+        </div>
+    </div>
+</section>
 
+<!-- INVENTORY -->
+<section id="page-inventory" class="admin-page">
+
+    <div class="page-actions">
+        <div>
+            <h2>Inventory</h2>
+            <p>Current materials and stock levels.</p>
+        </div>
+    </div>
+
+    <div class="content-card table-card">
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Material</th>
+                        <th>Stock</th>
+                        <th>Minimum</th>
+                        <th>Lead Time</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody id="inventoryTable"></tbody>
+            </table>
+        </div>
+    </div>
+</section>
+
+<!-- FORECAST -->
+<section id="page-forecast" class="admin-page">
+
+    <div class="page-actions">
+        <div>
+            <h2>Predictive Restock Forecast</h2>
+            <p>Forecast demand using appointments, BOM usage and supplier lead time.</p>
+        </div>
+    </div>
+
+    <div class="forecast-cards">
+        <div class="forecast-stat">
+            <i class="fa-solid fa-calendar-days"></i>
+            <strong id="forecastAppointments">0</strong>
+            <span>Upcoming Procedures</span>
+        </div>
+
+        <div class="forecast-stat">
+            <i class="fa-solid fa-box"></i>
+            <strong id="forecastMaterials">0</strong>
+            <span>Materials</span>
+        </div>
+
+        <div class="forecast-stat">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+            <strong id="forecastWarnings">0</strong>
+            <span>Warnings</span>
+        </div>
+    </div>
+
+    <div class="content-card">
+        <h2>Forecast Analysis</h2>
+        <div id="forecastResults"></div>
+    </div>
+</section>
+
+<!-- REPORTS -->
+<section id="page-reports" class="admin-page">
+
+    <div class="page-actions">
+        <div>
+            <h2>Reports</h2>
+            <p>Clinic management summary.</p>
+        </div>
+    </div>
+
+    <div class="report-grid">
+        <div class="report-card"><strong id="reportPatients">0</strong><span>Total Patients</span></div>
+        <div class="report-card"><strong id="reportAppointments">0</strong><span>Total Appointments</span></div>
+        <div class="report-card"><strong id="reportCompleted">0</strong><span>Completed</span></div>
+        <div class="report-card"><strong id="reportNoShow">0</strong><span>No-Shows</span></div>
+    </div>
+</section>
+
+</main>
 </div>
 
-<footer>
-© <span id="year"></span> Pecaña Dental Clinic
-</footer>
+<!-- WALK-IN MODAL -->
+<div id="walkinModal" class="modal hidden">
+    <div class="modal-card">
+        <div class="modal-header">
+            <h2>Register Walk-In</h2>
+            <button onclick="closeWalkinModal()">×</button>
+        </div>
+
+        <form id="walkinForm">
+            <label>Patient</label>
+            <select id="walkinPatient" required></select>
+
+            <label>Dental Service</label>
+            <select id="walkinService" required>
+                <option>Dental Check-up</option>
+                <option>Dental Cleaning</option>
+                <option>Tooth Restoration</option>
+                <option>Tooth Extraction</option>
+            </select>
+
+            <button class="btn-primary">Add to Walk-In Queue</button>
+        </form>
+    </div>
+</div>
+
+<!-- PATIENT MODAL -->
+<div id="patientModal" class="modal hidden">
+    <div class="modal-card">
+        <div class="modal-header">
+            <h2>Patient Information</h2>
+            <button onclick="closePatientModal()">×</button>
+        </div>
+        <div id="patientDetails"></div>
+    </div>
+</div>
 
 <script src="script.js"></script>
-
 </body>
 </html>
