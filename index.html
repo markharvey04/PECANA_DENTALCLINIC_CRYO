@@ -331,16 +331,20 @@
     <main class="admin-main">
 
     <header class="admin-header">
-        <div>
-            <h1 id="pageTitle">Dashboard</h1>
-        </div>
+    <div>
+        <h1 id="pageTitle">Dashboard</h1>
+    </div>
 
+    <!-- NEW CODE ADDED HERE -->
+    <div class="admin-user-wrapper">
         <div class="admin-user">
-            <i class="fa-solid fa-user-shield"></i>
-            Administrator
+            <i class="fa-solid fa-user-shield"></i> Administrator
         </div>
-    </header>
-
+        <button id="advanceScheduleBtn" class="calendar-trigger-btn hidden" onclick="openAdvanceCalendar()">
+            <i class="fa-solid fa-calendar-days"></i> Advance Schedule
+        </button>
+    </div>
+</header>
     <!-- DASHBOARD -->
     <section id="page-dashboard" class="admin-page active">
 
@@ -805,3 +809,16 @@
     <script src="script.js"></script>
     </body>
     </html>
+
+    <!-- Modal for the Advance Calendar -->
+<div id="calendarModal" class="modal hidden">
+    <div class="modal-card" style="width: min(800px, 85%);">
+        <div class="modal-header">
+            <h2>Advance Appointment Schedule</h2>
+            <button onclick="closeCalendarModal()">×</button>
+        </div>
+        <div id="calendar" style="padding: 10px; background: white;"></div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js"></script>

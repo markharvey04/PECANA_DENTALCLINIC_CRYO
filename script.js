@@ -211,8 +211,16 @@ function openAdminPage(page){
     const nav=document.querySelector(`.side-link[data-page="${page}"]`);
     if(nav)nav.classList.add("active");
 
-    document.getElementById("pageTitle").textContent=
+document.getElementById("pageTitle").textContent=
         pageNames[page]||"Dashboard";
+
+    // --- ADD THIS PART HERE ---
+    const calBtn = document.getElementById('advanceScheduleBtn');
+    if (calBtn) {
+        if (page === 'schedule') calBtn.classList.remove('hidden');
+        else calBtn.classList.add('hidden');
+    }
+    // --------------------------
 
     renderAll();
 }
@@ -1271,3 +1279,51 @@ document.addEventListener("DOMContentLoaded",()=>{
     if(bookingDate)bookingDate.min=today();
     if(adminDate)adminDate.min=today();
 });
+
+/* ================= ADVANCE CALENDAR LOGIC ================= */
+
+let advanceCalendar;
+
+function openAdvanceCalendar() {
+    // Show the modal
+    document.getElementById('calendarModal').classList.remove('hidden');
+    
+    const calendarEl = document.getElementById('calendar');
+    
+    // Initialize FullCalendar only if it hasn't been created yet
+    if (!advanceCalendar) {
+        advanceCalendar = new FullCalendar.Calendar(calendarEl, {
+            initialView: 'dayGridMonth',
+            headerToolbar: {
+                left: 'prev,next today',
+                center: 'title',
+                right: 'dayGridMonth,timeGridWeek'
+            },
+            // Maps your existing 'appointments' array to the calendar format
+            events: appointments.map(app => ({
+                title: `${app.patientName} (${app.service})`,
+                start: `${app.date}T${app.time}`,
+                backgroundColor: app.status === 'Completed' ? '#16834b' : '#5b0b68',
+                borderColor: 'transparent'
+            }))
+        });
+    } else {
+        // Update events in case you added a new appointment since last opening
+        advanceCalendar.removeAllEvents();
+        advanceCalendar.addEventSource(appointments.map(app => ({
+            title: `${app.patientName} (${app.service})`,
+            start: `${app.date}T${app.time}`,
+            backgroundColor: app.status === 'Completed' ? '#16834b' : '#5b0b68',
+            borderColor: 'transparent'
+        })));
+    }
+    
+    advanceCalendar.render();
+    
+    // Fix for rendering size inside a modal
+    setTimeout(() => advanceCalendar.updateSize(), 50);
+}
+
+function closeCalendarModal() {
+    document.getElementById('calendarModal').classList.add('hidden');
+}

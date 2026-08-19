@@ -454,6 +454,42 @@ textarea{
 }
 
 .admin-user i{color:var(--purple2)}
+/* Layout for header right side */
+.admin-user-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 5px;
+}
+
+/* Style for the new Calendar Button */
+.calendar-trigger-btn {
+    background: var(--purple);
+    color: white;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: 0.3s;
+}
+
+.calendar-btn:hover {
+    background: var(--purple2);
+}
+
+/* Ensure the calendar itself looks good */
+#calendar {
+    color: var(--text);
+    font-size: 0.9rem;
+}
+
+.fc .fc-button-primary {
+    background-color: var(--purple) !important;
+    border-color: var(--purple) !important;
+}
 
 .admin-page{display:none}
 .admin-page.active{display:block}
