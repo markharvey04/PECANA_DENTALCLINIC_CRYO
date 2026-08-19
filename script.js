@@ -53,65 +53,274 @@ const nextQueue=(prefix,arr)=>{
 
 /* ================= DATA ================= */
 
-let patients=load(STORAGE.patients,[
+let patients = load(STORAGE.patients, [
     {
-        id:"P001",
-        name:"Juan Dela Cruz",
-        contact:"09171234567",
-        dob:"2000-05-15",
-        address:"Polangui, Albay",
-        gender:"Male",
-        emergency:"Maria Dela Cruz",
-        concern:"Regular dental check-up",
-        status:"Active"
+        id: "P001",
+        name: "Juan Dela Cruz",
+        contact: "09171234567",
+        dob: "2000-05-15",
+        address: "Polangui, Albay",
+        gender: "Male",
+        emergency: "Maria Dela Cruz",
+        concern: "Regular dental check-up",
+        status: "Active"
     },
     {
-        id:"P002",
-        name:"Maria Santos",
-        contact:"09181234567",
-        dob:"1999-08-22",
-        address:"Polangui, Albay",
-        gender:"Female",
-        emergency:"Pedro Santos",
-        concern:"Tooth cleaning",
-        status:"Active"
+        id: "P002",
+        name: "Maria Santos",
+        contact: "09181234567",
+        dob: "1999-08-22",
+        address: "Polangui, Albay",
+        gender: "Female",
+        emergency: "Pedro Santos",
+        concern: "Tooth cleaning",
+        status: "Active"
     },
     {
-        id:"P003",
-        name:"Carlos Reyes",
-        contact:"09191234567",
-        dob:"2001-02-10",
-        address:"Polangui, Albay",
-        gender:"Male",
-        emergency:"Ana Reyes",
-        concern:"Tooth pain",
-        status:"Active"
+        id: "P003",
+        name: "Carlos Reyes",
+        contact: "09191234567",
+        dob: "2001-02-10",
+        address: "Polangui, Albay",
+        gender: "Male",
+        emergency: "Ana Reyes",
+        concern: "Tooth pain",
+        status: "Active"
+    },
+    {
+        id: "P004",
+        name: "Angela Garcia",
+        contact: "09201234567",
+        dob: "2002-11-18",
+        address: "Oas, Albay",
+        gender: "Female",
+        emergency: "Ramon Garcia",
+        concern: "Dental check-up",
+        status: "Active"
+    },
+    {
+        id: "P005",
+        name: "Miguel Torres",
+        contact: "09211234567",
+        dob: "1995-06-25",
+        address: "Polangui, Albay",
+        gender: "Male",
+        emergency: "Lorna Torres",
+        concern: "Tooth extraction",
+        status: "Active"
+    },
+    {
+        id: "P006",
+        name: "Sofia Mendoza",
+        contact: "09221234567",
+        dob: "2001-01-30",
+        address: "Guinobatan, Albay",
+        gender: "Female",
+        emergency: "Jose Mendoza",
+        concern: "Dental check-up",
+        status: "Active"
+    },
+    {
+        id: "P007",
+        name: "Daniel Cruz",
+        contact: "09231234567",
+        dob: "1997-09-14",
+        address: "Polangui, Albay",
+        gender: "Male",
+        emergency: "Elena Cruz",
+        concern: "Gum pain",
+        status: "Active"
+    },
+    {
+        id: "P008",
+        name: "Patricia Lopez",
+        contact: "09241234567",
+        dob: "1999-12-05",
+        address: "Nabua, Camarines Sur",
+        gender: "Female",
+        emergency: "Roberto Lopez",
+        concern: "Dental cleaning",
+        status: "Active"
+    },
+    {
+        id: "P009",
+        name: "Mark Villanueva",
+        contact: "09251234567",
+        dob: "1994-04-19",
+        address: "Polangui, Albay",
+        gender: "Male",
+        emergency: "Teresa Villanueva",
+        concern: "Broken tooth",
+        status: "Active"
+    },
+    {
+        id: "P010",
+        name: "Jessica Fernandez",
+        contact: "09261234567",
+        dob: "2003-07-27",
+        address: "Iriga City, Camarines Sur",
+        gender: "Female",
+        emergency: "Manuel Fernandez",
+        concern: "Tooth sensitivity",
+        status: "Active"
+    },
+    {
+        id: "P011",
+        name: "Kevin Navarro",
+        contact: "09271234567",
+        dob: "1996-02-11",
+        address: "Polangui, Albay",
+        gender: "Male",
+        emergency: "Rosa Navarro",
+        concern: "Dental filling",
+        status: "Active"
+    },
+    {
+        id: "P012",
+        name: "Christine Aquino",
+        contact: "09281234567",
+        dob: "2000-10-03",
+        address: "Libon, Albay",
+        gender: "Female",
+        emergency: "Ernesto Aquino",
+        concern: "Toothache",
+        status: "Active"
+    },
+    {
+        id: "P013",
+        name: "Anthony Bautista",
+        contact: "09291234567",
+        dob: "1993-05-21",
+        address: "Polangui, Albay",
+        gender: "Male",
+        emergency: "Carmen Bautista",
+        concern: "Root canal consultation",
+        status: "Active"
+    },
+    {
+        id: "P014",
+        name: "Stephanie Ramos",
+        contact: "09301234567",
+        dob: "1998-01-16",
+        address: "Tiwi, Albay",
+        gender: "Female",
+        emergency: "Eduardo Ramos",
+        concern: "Dental cleaning",
+        status: "Active"
+    },
+    {
+        id: "P015",
+        name: "Ryan Castillo",
+        contact: "09311234567",
+        dob: "1991-11-09",
+        address: "Polangui, Albay",
+        gender: "Male",
+        emergency: "Marissa Castillo",
+        concern: "Tooth extraction",
+        status: "Active"
+    },
+    {
+        id: "P016",
+        name: "Nicole Flores",
+        contact: "09321234567",
+        dob: "2004-03-28",
+        address: "Oas, Albay",
+        gender: "Female",
+        emergency: "Ricardo Flores",
+        concern: "Braces consultation",
+        status: "Active"
+    },
+    {
+        id: "P017",
+        name: "Joshua Ramirez",
+        contact: "09331234567",
+        dob: "1990-08-13",
+        address: "Polangui, Albay",
+        gender: "Male",
+        emergency: "Linda Ramirez",
+        concern: "Dental filling",
+        status: "Active"
+    },
+    {
+        id: "P018",
+        name: "Karen Manalo",
+        contact: "09341234567",
+        dob: "1997-06-07",
+        address: "Ligao City, Albay",
+        gender: "Female",
+        emergency: "Fernando Manalo",
+        concern: "Gum treatment",
+        status: "Active"
+    },
+    {
+        id: "P019",
+        name: "Gabriel Salazar",
+        contact: "09351234567",
+        dob: "2001-09-26",
+        address: "Polangui, Albay",
+        gender: "Male",
+        emergency: "Monica Salazar",
+        concern: "Regular dental check-up",
+        status: "Active"
+    },
+    {
+        id: "P020",
+        name: "Rachel Dominguez",
+        contact: "09361234567",
+        dob: "1995-12-17",
+        address: "Guinobatan, Albay",
+        gender: "Female",
+        emergency: "Antonio Dominguez",
+        concern: "Tooth sensitivity",
+        status: "Active"
+    },
+    {
+        id: "P021",
+        name: "Francis Mercado",
+        contact: "09371234567",
+        dob: "1989-04-02",
+        address: "Polangui, Albay",
+        gender: "Male",
+        emergency: "Gloria Mercado",
+        concern: "Dental consultation",
+        status: "Active"
+    },
+    {
+        id: "P022",
+        name: "Beatrice Navarro",
+        contact: "09381234567",
+        dob: "2002-05-12",
+        address: "Oas, Albay",
+        gender: "Female",
+        emergency: "Rogelio Navarro",
+        concern: "Cavity",
+        status: "Active"
     }
 ]);
 
-let appointments=load(STORAGE.appointments,[
+let appointments = load(STORAGE.appointments, [
     {
-        id:"APT001",
-        patientId:"P001",
-        patientName:"Juan Dela Cruz",
-        date:today(),
-        time:"09:00",
-        service:"Dental Check-up",
-        status:"Approved",
-        queueStatus:"Waiting"
+        id: "APT001",
+        patientId: "P001",
+        patientName: "Juan Dela Cruz",
+        date: today(),
+        time: "09:00",
+        service: "Dental Check-up",
+        status: "Approved",
+        queueStatus: "Waiting"
     }
 ]);
 
-let appointmentQueue=load(STORAGE.appointmentQueue,[
+let appointmentQueue = load(STORAGE.appointmentQueue, [
     {
-        number:"A001",
-        appointmentId:"APT001",
-        patientId:"P001",
-        patientName:"Juan Dela Cruz",
-        service:"Dental Check-up",
-        time:"09:00",
-        date:today(),
-        status:"Waiting"
+        number: "A001",
+        appointmentId: "APT001",
+        patientId: "P001",
+        patientName: "Juan Dela Cruz",
+        service: "Dental Check-up",
+        time: "09:00",
+        date: today(),
+        status: "Waiting"
     }
 ]);
 
