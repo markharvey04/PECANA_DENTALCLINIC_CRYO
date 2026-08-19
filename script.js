@@ -904,8 +904,46 @@ function renderInventory(){
                     ${i.stock<=i.minimum?"Restock":"OK"}
                 </span>
             </td>
+            <td>
+                <button class="action-btn success" onclick="openRestockModal('${i.id}')">
+                    <i class="fa-solid fa-pen-to-square"></i> Edit
+                </button>
+            </td>
         </tr>
     `).join("");
+}
+/* ================= INVENTORY EDIT LOGIC ================= */
+
+function openRestockModal(id) {
+    const item = inventory.find(x => x.id === id);
+    if (!item) return;
+
+    document.getElementById("restockId").value = item.id;
+    document.getElementById("restockName").value = item.name;
+    document.getElementById("restockValue").value = item.stock;
+    document.getElementById("restockModal").classList.remove("hidden");
+}
+
+function closeRestockModal() {
+    document.getElementById("restockModal").classList.add("hidden");
+}
+
+function handleRestockUpdate(e) {
+    e.preventDefault();
+    
+    const id = document.getElementById("restockId").value;
+    const newVal = parseInt(document.getElementById("restockValue").value);
+
+    const item = inventory.find(x => x.id === id);
+    if (item) {
+        item.stock = newVal;
+        save(STORAGE.inventory, inventory); 
+        closeRestockModal();
+        renderAll(); 
+        openAdminPage('inventory');
+        alert(`${item.name} stock updated successfully.`);
+    }
+    return false;
 }
 
 /* ================= PREDICTIVE FORECAST ================= */
