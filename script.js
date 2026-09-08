@@ -35,26 +35,52 @@
         return d.toLocaleTimeString("en-US",{hour:"numeric",minute:"2-digit"});
     };
 
-    // Validation helper for clinic hours (7AM-8PM, Lunch 12PM-1PM)
-    const isValidClinicTime = (t) => {
-        if(!t) return false;
-        const [h, m] = t.split(":").map(Number);
-        const total = h * 60 + m;
-        const start = 7 * 60;       // 7:00 AM
-        const end = 20 * 60;        // 8:00 PM
-        const lunchStart = 12 * 60; // 12:00 PM
-        const lunchEnd = 13 * 60;   // 1:00 PM
+    /* ================= CONSOLIDATED SPECIFIC VALIDATION ================= */
 
-        if (total < start || total >= end) {
-            alert("Clinic hours are 7:00 AM to 8:00 PM.");
-            return false;
-        }
-        if (total >= lunchStart && total < lunchEnd) {
-            alert("The clinic is on lunch break from 12:00 PM to 1:00 PM. Please select another time.");
-            return false;
-        }
-        return true;
-    };
+const validateClinicSchedule = (dateStr, timeStr) => {
+    const now = new Date();
+    // Create a date object for the selected time (local time)
+    const selectedDateTime = new Date(`${dateStr}T${timeStr}`);
+    
+    // Get current local date in YYYY-MM-DD format
+    const todayStr = now.getFullYear() + '-' + 
+                     String(now.getMonth() + 1).padStart(2, '0') + '-' + 
+                     String(now.getDate()).padStart(2, '0');
+
+    // 1. SPECIFIC DATE ERROR (If they picked a day in the past)
+    if (dateStr < todayStr) {
+        alert("DATE ERROR: The date you selected has already passed. Please choose a present or future date.");
+        return false;
+    }
+
+    // 2. SPECIFIC TIME ERROR (If they picked today, but the hour has passed)
+    if (dateStr === todayStr && selectedDateTime < now) {
+        alert("TIME ERROR: The time you selected for today has already passed. Please choose a later time.");
+        return false;
+    }
+
+    // Logic for Clinic Hours and Lunch
+    const [h, m] = timeStr.split(":").map(Number);
+    const totalMinutes = h * 60 + m;
+    const start = 7 * 60;       // 7:00 AM
+    const end = 20 * 60;        // 8:00 PM
+    const lunchStart = 12 * 60; // 12:00 PM
+    const lunchEnd = 13 * 60;   // 1:00 PM
+
+    // 3. CLINIC HOURS ERROR
+    if (totalMinutes < start || totalMinutes >= end) {
+        alert("OPERATING HOURS ERROR: The clinic is only open from 7:00 AM to 8:00 PM.");
+        return false;
+    }
+
+    // 4. LUNCH BREAK ERROR
+    if (totalMinutes >= lunchStart && totalMinutes < lunchEnd) {
+        alert("LUNCH BREAK ERROR: The clinic is closed for lunch from 12:00 PM to 1:00 PM. Please select another time.");
+        return false;
+    }
+
+    return true; // If the code reaches here, everything is correct.
+};
     const esc=v=>String(v??"")
     .replaceAll("&","&amp;")
     .replaceAll("<","&lt;")
@@ -176,22 +202,23 @@ let inventory=load(STORAGE.inventory,[
 
     function logout(){ showPublicSite(); }
 
-    /* ================= LOGIN ================= */
+/* ================= LOGIN ================= */
 
-    document.getElementById("loginForm").addEventListener("submit",e=>{
-        e.preventDefault();
-        const user=document.getElementById("loginUsername").value.trim();
-        const pass=document.getElementById("loginPassword").value.trim();
-        if((user==="admin"&&pass==="admin123")||(user==="administrator"&&pass==="admin123")){
-            document.getElementById("loginPage").classList.add("hidden");
-            document.getElementById("publicApp").classList.add("hidden");
-            document.getElementById("adminApp").classList.remove("hidden");
-            openAdminPage("dashboard");
-        }else{
-            alert("Invalid login.");
-        }
-    });
-
+document.getElementById("loginForm").addEventListener("submit", e => {
+    e.preventDefault();
+    const user = document.getElementById("loginUsername").value.trim();
+    const pass = document.getElementById("loginPassword").value.trim();
+    
+    // Check credentials
+    if ((user === "admin" && pass === "admin123") || (user === "administrator" && pass === "admin123")) {
+        document.getElementById("loginPage").classList.add("hidden");
+        document.getElementById("publicApp").classList.add("hidden");
+        document.getElementById("adminApp").classList.remove("hidden");
+        openAdminPage("dashboard"); // This opens the admin area
+    } else {
+        alert("Invalid login.");
+    }
+});
     /* ================= ADMIN NAVIGATION ================= */
 
     const pageNames={
@@ -374,74 +401,92 @@ function changeWalkinQty(name, delta) {
     // 4. IMPORTANT: Re-run the render function to update the "x1" to "x2" etc.
     renderWalkinAdjustmentList();
 }
-    /* ================= SAVE APPOINTMENT ================= */
+   /* ================= ADMIN SAVE APPOINTMENT ================= */
 
-    document.getElementById("adminAppointmentForm").addEventListener("submit",e=>{
-        e.preventDefault();
-        const patientId=document.getElementById("adminAppointmentPatient").value;
-        const patient=patients.find(p=>p.id===patientId);
-        if(!patient){ alert("Please select a patient."); return; }
-        
-        const date=document.getElementById("adminAppointmentDate").value;
-        const time=document.getElementById("adminAppointmentTime").value;
+document.getElementById("adminAppointmentForm").addEventListener("submit", e => {
+    e.preventDefault();
 
-        // --- ADDED VALIDATION START ---
-        if(!isValidClinicTime(time)) return; 
-        // --- ADDED VALIDATION END ---
+    // 1. Get values using correct Admin IDs
+    const date = document.getElementById("adminAppointmentDate").value;
+    const time = document.getElementById("adminAppointmentTime").value;
+    const patientId = document.getElementById("adminAppointmentPatient").value;
+    const service = document.getElementById("adminAppointmentService").value;
 
-        const service=document.getElementById("adminAppointmentService").value;
+    // 2. Run the validation function we created
+    // (Ensure you are using picking Sept 8 or later!)
+    if (!validateSchedule(date, time)) {
+        return; 
+    }
 
-        const appointment={
-            id:nextId("APT",appointments),
-            patientId:patient.id,
-            patientName:patient.name,
-            date,
-            time,
-            service,
-            status:"Pending",
-            queueStatus:null,
-            // Save the interactively adjusted materials
-            customMaterials: { ...temporaryMaterialAdjustments } 
-        };
+    const patient = patients.find(p => p.id === patientId);
+    if (!patient) { alert("Please select a patient."); return; }
 
-        appointments.push(appointment);
-        save(STORAGE.appointments,appointments);
-        e.target.reset();
-        
-        const card = document.getElementById("materialInsightCard");
-        if(card) card.classList.add("hidden");
+    // 3. Create the appointment object
+    const appointment = {
+        id: nextId("APT", appointments),
+        patientId: patient.id,
+        patientName: patient.name,
+        date,
+        time,
+        service,
+        status: "Pending",
+        queueStatus: null,
+        // Save the material adjustments from the insight card
+        customMaterials: { ...temporaryMaterialAdjustments } 
+    };
 
-        alert("Appointment created successfully.");
-        openAdminPage("appointments");
-    });
+    // 4. Save and Reset
+    appointments.push(appointment);
+    save(STORAGE.appointments, appointments);
+    e.target.reset();
+    
+    // Hide the insight card
+    const card = document.getElementById("materialInsightCard");
+    if(card) card.classList.add("hidden");
 
-    /* ================= PATIENTS ================= */
+    alert("Appointment created successfully.");
+    openAdminPage("appointments");
+});
 
-    document.getElementById("patientForm").addEventListener("submit",e=>{
-        e.preventDefault();
-        const name=document.getElementById("patientName").value.trim();
-        if(!name){ alert("Please enter the patient's name."); return; }
-        const duplicate=patients.some(p=>p.name.toLowerCase()===name.toLowerCase());
-        if(duplicate){ alert("This patient is already registered."); return; }
 
-        const patient={
-            id:nextId("P",patients),
-            name,
-            contact:document.getElementById("patientContact").value.trim(),
-            dob:document.getElementById("patientDOB").value,
-            gender:document.getElementById("patientGender").value,
-            address:document.getElementById("patientAddress").value.trim(),
-            emergency:document.getElementById("patientEmergency").value.trim(),
-            concern:document.getElementById("patientConcern").value.trim(),
-            status:"Active"
-        };
+/* ================= PATIENTS ================= */
+function openAddPatientModal() {
+    document.getElementById("addPatientModal").classList.remove("hidden");
+}
 
-        patients.push(patient);
-        save(STORAGE.patients,patients);
-        e.target.reset();
-        alert(`${patient.name} was successfully registered.`);
-        openAdminPage("patients");
-    });
+function closeAddPatientModal() {
+    document.getElementById("addPatientModal").classList.add("hidden");
+    document.getElementById("patientForm").reset();
+}
+
+document.getElementById("patientForm").addEventListener("submit", e => {
+    e.preventDefault();
+    const name = document.getElementById("patientName").value.trim();
+    if (!name) { alert("Please enter the patient's name."); return; }
+    
+    const duplicate = patients.some(p => p.name.toLowerCase() === name.toLowerCase());
+    if (duplicate) { alert("This patient is already registered."); return; }
+
+    const patient = {
+        id: nextId("P", patients),
+        name,
+        contact: document.getElementById("patientContact").value.trim(),
+        dob: document.getElementById("patientDOB").value,
+        gender: document.getElementById("patientGender").value,
+        address: document.getElementById("patientAddress").value.trim(),
+        emergency: document.getElementById("patientEmergency").value.trim(),
+        concern: document.getElementById("patientConcern").value.trim(),
+        status: "Active"
+    };
+
+    patients.push(patient);
+    save(STORAGE.patients, patients);
+    
+    alert(`${patient.name} was successfully registered.`);
+    
+    closeAddPatientModal();
+    renderAll(); 
+});
 
     function viewPatient(id){
         const p=patients.find(x=>x.id===id);
@@ -460,6 +505,14 @@ function changeWalkinQty(name, delta) {
         `;
         document.getElementById("patientModal").classList.remove("hidden");
     }
+    function openAddPatientModal() {
+    document.getElementById("addPatientModal").classList.remove("hidden");
+}
+
+    function closeAddPatientModal() {
+    document.getElementById("addPatientModal").classList.add("hidden");
+    document.getElementById("patientForm").reset();
+}
 
     function closePatientModal(){ document.getElementById("patientModal").classList.add("hidden"); }
 
@@ -539,16 +592,24 @@ function changeWalkinQty(name, delta) {
         save(STORAGE.appointmentQueue,appointmentQueue);
     }
 
-    function approveAppointment(id){
-        const a=appointments.find(x=>x.id===id);
-        if(!a)return;
-        a.status="Approved";
-        a.queueStatus="Waiting";
-        syncAppointmentQueue();
-        save(STORAGE.appointments,appointments);
-        alert(`${a.patientName} is approved and added to the Appointment Queue.`);
-        renderAll();
+    function approveAppointment(id) {
+    const a = appointments.find(x => x.id === id);
+    if (!a) return;
+
+    // 1. Ask for confirmation
+    const confirmMessage = `Are you sure you want to approve the appointment for ${a.patientName} on ${formatDate(a.date)} at ${formatTime(a.time)}?`;
+    
+    if (!confirm(confirmMessage)) {
+        return; // Stop if Cancel is clicked
     }
+
+    // 2. Process the approval
+    a.status = "Approved";
+    a.queueStatus = "Waiting";
+    syncAppointmentQueue();
+    save(STORAGE.appointments, appointments);
+    renderAll();
+}
 
     function renderAppointmentQueue(){
         const container=document.getElementById("appointmentQueueContainer");
@@ -750,7 +811,6 @@ function changeWalkinQty(name, delta) {
                 <td><strong>${esc(i.name)}</strong></td>
                 <td>${i.stock}</td>
                 <td>${i.minimum}</td>
-                <td>${i.leadTime} days</td>
                 <td><span class="badge ${i.stock<=i.minimum?"no-show":"approved"}">${i.stock<=i.minimum?"Restock":"OK"}</span></td>
                 <td><button class="action-btn success" onclick="openRestockModal('${i.id}')">Edit</button></td>
             </tr>
@@ -845,36 +905,98 @@ function changeWalkinQty(name, delta) {
         wBox.innerHTML=w.length?w.map(q=>`<div class="queue-card"><div class="queue-number">${q.number}</div><div class="queue-details"><h3>${esc(q.patientName)}</h3><p>${esc(q.service)}</p><span class="badge ${statusClass(q.status)}">${q.status}</span></div></div>`).join(""):`<div class="empty-state">No walk-in patients waiting.</div>`;
     }
 
-    /* ================= PUBLIC BOOKING ================= */
+ /* ================= PUBLIC BOOKING ================= */
 
-    document.getElementById("appointmentForm").addEventListener("submit",e=>{
-        e.preventDefault();
-        const name=document.getElementById("bookingName").value.trim();
-        const contact=document.getElementById("bookingContact").value.trim();
-        const date=document.getElementById("bookingDate").value;
-        const time=document.getElementById("bookingTime").value;
+/**
+ * Consolidates all logic for Date/Time validation with specific error messages.
+ */
+const validateSchedule = (dateStr, timeStr) => {
+    const now = new Date();
+    const selectedDateTime = new Date(`${dateStr}T${timeStr}`);
+    
+    // Get current local date in YYYY-MM-DD format
+    const todayStr = now.getFullYear() + '-' + 
+                     String(now.getMonth() + 1).padStart(2, '0') + '-' + 
+                     String(now.getDate()).padStart(2, '0');
 
-        // --- ADDED VALIDATION START ---
-        if(!isValidClinicTime(time)) return; 
-        // --- ADDED VALIDATION END ---
+    // 1. SPECIFIC DATE ERROR
+    if (dateStr < todayStr) {
+        alert("DATE ERROR: The date you selected has already passed. Please choose a present or future date.");
+        return false;
+    }
 
-        const service=document.getElementById("bookingService").value;
-        const concern=document.getElementById("bookingConcern").value.trim();
-        let patient=patients.find(p=>p.name.toLowerCase()===name.toLowerCase());
-        if(!patient){
-            patient={ id:nextId("P",patients), name, contact, dob:"", address:"", gender:"", emergency:"", concern, status:"Active" };
-            patients.push(patient);
-            save(STORAGE.patients,patients);
-        }
-        const appointment={ id:nextId("APT",appointments), patientId:patient.id, patientName:patient.name, date, time, service, status:"Pending", queueStatus:null };
-        appointments.push(appointment);
-        save(STORAGE.appointments,appointments);
-        e.target.reset();
-        alert("Appointment submitted successfully.\n\nClinic staff will review and approve your appointment.");
-        showPublicPage("home");
-    });
+    // 2. SPECIFIC TIME ERROR (Only if date is today)
+    if (dateStr === todayStr && selectedDateTime < now) {
+        alert("TIME ERROR: The time you selected for today has already passed. Please choose a later time.");
+        return false;
+    }
 
-    function selectService(service){ showPublicPage("appointment"); document.getElementById("bookingService").value=service; }
+    const [h, m] = timeStr.split(":").map(Number);
+    const totalMinutes = h * 60 + m;
+    const start = 7 * 60;       // 7:00 AM
+    const end = 20 * 60;        // 8:00 PM
+    const lunchStart = 12 * 60; // 12:00 PM
+    const lunchEnd = 13 * 60;   // 1:00 PM
+
+    // 3. CLINIC HOURS ERROR
+    if (totalMinutes < start || totalMinutes >= end) {
+        alert("OPERATING HOURS ERROR: The clinic is only open from 7:00 AM to 8:00 PM.");
+        return false;
+    }
+
+    // 4. LUNCH BREAK ERROR
+    if (totalMinutes >= lunchStart && totalMinutes < lunchEnd) {
+        alert("LUNCH BREAK ERROR: The clinic is closed for lunch from 12:00 PM to 1:00 PM.");
+        return false;
+    }
+
+    return true; 
+};
+
+// THE PATIENT BOOKING LISTENER
+document.getElementById("appointmentForm").addEventListener("submit", e => {
+    e.preventDefault();
+
+    // Correct IDs for the Public/Patient form
+    const date = document.getElementById("bookingDate").value;
+    const time = document.getElementById("bookingTime").value;
+    const name = document.getElementById("bookingName").value.trim();
+    const contact = document.getElementById("bookingContact").value.trim();
+    const service = document.getElementById("bookingService").value;
+    const concern = document.getElementById("bookingConcern").value.trim();
+
+    // Step 1: Run Validation
+    if (!validateSchedule(date, time)) {
+        return; 
+    }
+
+    // Step 2: Handle Patient Data
+    let patient = patients.find(p => p.name.toLowerCase() === name.toLowerCase());
+    if (!patient) {
+        patient = { 
+            id: nextId("P", patients), 
+            name, contact, dob: "", address: "", gender: "", emergency: "", concern, status: "Active" 
+        };
+        patients.push(patient);
+        save(STORAGE.patients, patients);
+    }
+
+    // Step 3: Create Appointment
+    const appointment = { 
+        id: nextId("APT", appointments), 
+        patientId: patient.id, 
+        patientName: patient.name, 
+        date, time, service, status: "Pending", queueStatus: null 
+    };
+
+    appointments.push(appointment);
+    save(STORAGE.appointments, appointments);
+    
+    // Step 4: Finalize
+    e.target.reset();
+    alert("Appointment submitted successfully. Clinic staff will review your request.");
+    showPublicPage("home");
+});
 
     /* ================= DASHBOARD ================= */
 
@@ -918,22 +1040,29 @@ function changeWalkinQty(name, delta) {
         }
     }
 
-    function renderDashboard(){
-        const todayAppointments=appointments.filter( a=>a.date===today()&& a.status!=="Cancelled" );
-        const waitingAppointments=appointmentQueue.filter( q=>q.status==="Waiting" && q.date===today() );
-        const waitingWalkins=walkins.filter( q=>q.status==="Waiting" && q.date===today() );
-        const servingA=appointmentQueue.find( q=>q.status==="Serving" );
-        const servingW=walkins.find( q=>q.status==="Serving" );
-        let serving="None";
-        if(servingA)serving=servingA.number;
-        if(servingW)serving=servingW.number;
-        document.getElementById("statAppointments").textContent= todayAppointments.length;
-        document.getElementById("statWaitingAppointments").textContent= waitingAppointments.length;
-        document.getElementById("statWaitingWalkins").textContent= waitingWalkins.length;
-        document.getElementById("statServing").textContent= serving;
-        document.getElementById("statPatients").textContent= patients.length;
-        renderDashboardCharts();
-    }
+    function renderDashboard() {
+    const todayDate = today();
+    
+    const todayAppointments = appointments.filter(a => a.date === todayDate && a.status !== "Cancelled");
+    const waitingAppointments = appointmentQueue.filter(q => q.status === "Waiting" && q.date === todayDate);
+    const waitingWalkins = walkins.filter(q => q.status === "Waiting" && q.date === todayDate);
+    
+    const servingA = appointmentQueue.find(q => q.status === "Serving");
+    const servingW = walkins.find(q => q.status === "Serving");
+    
+    let serving = "None";
+    if (servingA) serving = servingA.number;
+    else if (servingW) serving = servingW.number;
+
+    // Update the cards
+    document.getElementById("statAppointments").textContent = todayAppointments.length;
+    document.getElementById("statWaitingAppointments").textContent = waitingAppointments.length;
+    document.getElementById("statWaitingWalkins").textContent = waitingWalkins.length;
+    document.getElementById("statServing").textContent = serving;
+    document.getElementById("statPatients").textContent = patients.length;
+
+    renderDashboardCharts();
+}
 
     /* ================= DASHBOARD RENDER ================= */
 
@@ -1065,14 +1194,17 @@ function changeWalkinQty(name, delta) {
 
     /* ================= START ================= */
 
-    document.addEventListener("DOMContentLoaded",()=>{
-        syncAppointmentQueue();
-        renderAll();
-        const bookingDate=document.getElementById("bookingDate");
-        const adminDate=document.getElementById("adminAppointmentDate");
-        if(bookingDate)bookingDate.min=today();
-        if(adminDate)adminDate.min=today();
-    });
+document.addEventListener("DOMContentLoaded", () => {
+    syncAppointmentQueue();
+    renderAll();
+    
+    // This prevents picking past dates in the calendar
+    const bookingDate = document.getElementById("bookingDate");
+    const adminDate = document.getElementById("adminAppointmentDate");
+    
+    if (bookingDate) bookingDate.min = today();
+    if (adminDate) adminDate.min = today();
+});
 
 /* ================= ADVANCE CALENDAR LOGIC ================= */
 
@@ -1128,3 +1260,114 @@ function openAdvanceCalendar() {
 }
 
 function closeCalendarModal() { document.getElementById('calendarModal').classList.add('hidden'); }
+/* ================= NOTIFICATION SYSTEM LOGIC ================= */
+
+function toggleNotifications(type) {
+    const box = type === 'adminNotify' ? document.getElementById('adminNotifyBox') : document.getElementById('patientNotifyBox');
+    box.classList.toggle('hidden');
+    
+    if (type === 'adminNotify') updateAdminNotifications();
+}
+
+// Close notifications when clicking outside
+window.addEventListener('click', (e) => {
+    if (!e.target.closest('.notification-wrapper')) {
+        document.getElementById('adminNotifyBox').classList.add('hidden');
+        document.getElementById('patientNotifyBox').classList.add('hidden');
+    }
+});
+
+function updateAdminNotifications() {
+    const list = document.getElementById('adminNotifyList');
+    const badge = document.getElementById('adminNotifyBadge');
+    let notifyCount = 0;
+    let html = '';
+
+    // 1. Check Inventory (Out of stock or Low stock)
+    inventory.forEach(item => {
+        if (item.stock <= item.minimum) {
+            notifyCount++;
+            // ADDED onclick="openAdminPage('inventory'); toggleNotifications('adminNotify')"
+            html += `
+                <div class="notify-item low-stock" onclick="openAdminPage('inventory'); toggleNotifications('adminNotify')">
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                    <div class="notify-content">
+                        <b>Low Stock Alert</b>
+                        <p>${item.name} is low (${item.stock} left). Click to view inventory.</p>
+                    </div>
+                </div>`;
+        }
+    });
+
+    // 2. Check Pending Appointments
+    const pending = appointments.filter(a => a.status === "Pending");
+    pending.forEach(a => {
+        notifyCount++;
+        // ADDED onclick="openAdminPage('appointments'); toggleNotifications('adminNotify')"
+        html += `
+            <div class="notify-item new-appt" onclick="openAdminPage('appointments'); toggleNotifications('adminNotify')">
+                <i class="fa-solid fa-calendar-plus"></i>
+                <div class="notify-content">
+                    <b>New Appointment Request</b>
+                    <p>${a.patientName} booked ${a.service} for ${formatDate(a.date)}. Click to manage.</p>
+                </div>
+            </div>`;
+    });
+
+    if (notifyCount === 0) {
+        html = '<p style="padding:20px; text-align:center; font-size:12px; color:#999;">No new notifications</p>';
+        badge.classList.add('hidden');
+    } else {
+        badge.classList.remove('hidden');
+        badge.textContent = notifyCount;
+    }
+
+    list.innerHTML = html;
+}
+
+function checkPatientNotifications() {
+    const searchVal = document.getElementById('patientNotifySearch').value.trim();
+    const list = document.getElementById('patientNotifyList');
+    
+    if (!searchVal) {
+        alert("Please enter your contact number.");
+        return;
+    }
+
+    // --- MAGIC LINE: Make the result card visible now ---
+    list.style.display = 'block';
+
+    const patientMatches = patients.filter(p => p.contact === searchVal);
+    const patientIds = patientMatches.map(p => p.id);
+    const myAppts = appointments.filter(a => patientIds.includes(a.patientId));
+
+    if (myAppts.length === 0) {
+        list.innerHTML = '<p style="padding:20px; text-align:center; font-size:12px; color:#999;">No records found for this number.</p>';
+        return;
+    }
+
+    let html = '';
+    myAppts.forEach(a => {
+        let statusIcon = a.status === "Approved" ? "fa-circle-check" : "fa-clock";
+        let statusClass = a.status === "Approved" ? "approved" : "";
+        
+        html += `
+            <div class="notify-item ${statusClass}" onclick="showPublicPage('queue-status'); toggleNotifications('patientNotify')">
+                <i class="fa-solid ${statusIcon}"></i>
+                <div class="notify-content">
+                    <b>Appointment Status: ${a.status}</b>
+                    <p>Service: ${a.service}<br>Schedule: ${formatDate(a.date)} at ${formatTime(a.time)}</p>
+                    <small style="color:var(--purple2);">Click to view Queue Status →</small>
+                </div>
+            </div>`;
+    });
+
+    list.innerHTML = html;
+}
+
+// Update the admin badge every time the app renders
+const originalRenderAll = renderAll;
+renderAll = function() {
+    originalRenderAll();
+    updateAdminNotifications();
+};

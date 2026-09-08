@@ -454,12 +454,51 @@ textarea{
 }
 
 .admin-user i{color:var(--purple2)}
-/* Layout for header right side */
+/* --- ADMIN NOTIFICATION SYSTEM FIX --- */
+
+/* This forces the Bell and the Admin Badge to be perfectly centered side-by-side */
 .admin-user-wrapper {
+    display: flex !important;
+    flex-direction: row !important; /* Forces side-by-side layout */
+    align-items: center !important; 
+    gap: 20px;
+}
+
+/* Makes the bell purple in the Admin Dashboard */
+.admin-notif .notification-icon {
+    color: var(--purple) !important;
+    font-size: 1.3rem;
+}
+
+/* The red circle with the number */
+.notification-badge {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    background: var(--red);
+    color: white;
+    font-size: 10px;
+    padding: 2px 6px;
+    border-radius: 50%;
+    border: 2px solid white;
+    font-weight: bold;
+    z-index: 10;
+}
+
+/* Adjusts where the Admin dropdown box appears */
+#adminNotifyBox {
+    top: 45px;
+    right: 0;
+    width: 320px;
+    color: var(--text); /* Ensures text is readable */
+}
+
+/* Ensure the Admin bell stays centered with the badge */
+.admin-notif {
+    position: relative;
     display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    gap: 5px;
+    align-items: center;
+    justify-content: center;
 }
 
 /* Style for the new Calendar Button */
@@ -1260,4 +1299,108 @@ tr:hover td{background:#fcf9fd}
     font-weight: 600;
     color: #334155;
     font-size: 0.9rem;
+}
+/* --- FIXED NOTIFICATION STYLES --- */
+
+/* 1. Force the navigation container to center everything perfectly */
+.public-header nav {
+    display: flex !important;
+    align-items: center !important; /* Forces vertical centering */
+    gap: 8px;
+    height: 100%;
+}
+
+/* 2. The Wrapper: We give it a height to match your buttons */
+.notification-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 12px;
+    height: 42px; /* This matches the visual height of your buttons */
+    cursor: pointer;
+    vertical-align: middle;
+}
+
+.notification-icon {
+    font-size: 1.2rem;
+    color: white;
+    margin: 0;
+    line-height: 1; /* Prevents text-line height from pushing it up */
+}
+
+/* 3. The Dropdown: position: absolute is KEY. 
+   It keeps the box from "pushing" the Login button when it opens. */
+.notification-dropdown {
+    position: absolute;
+    top: 55px; /* Safely below the purple bar */
+    right: 0;
+    width: 300px;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+    z-index: 9999;
+    border: 1px solid #eee;
+    overflow: hidden;
+    color: var(--text);
+}
+
+/* Internal Dropdown Styling */
+.notify-header { background: var(--purple); color: white; padding: 12px; font-weight: bold; }
+.notify-search { padding: 15px; background: #fdfafd; border-bottom: 1px solid #eee; }
+.notify-search input { width: 100%; padding: 10px; border-radius: 6px; border: 1px solid #ddd; margin-bottom: 8px; font-size: 13px; }
+.notify-search button { width: 100%; background: var(--purple); color: white; padding: 8px; border-radius: 6px; font-size: 13px; }
+.notify-body { max-height: 300px; overflow-y: auto; text-align: left; }
+.notify-item { padding: 12px; border-bottom: 1px solid #f0f0f0; display: flex; gap: 10px; }
+
+/* The Helper class to keep things hidden */
+.hidden { display: none !important; }
+
+.notify-item {
+    cursor: pointer; /* Makes the mouse turn into a hand */
+    transition: background 0.2s ease;
+}
+
+.notify-item:hover {
+    background-color: #fdf5ff !important; /* Subtle purple highlight when hovering */
+}
+
+/* Optional: Add a small arrow or indicator on hover */
+.notify-item:hover::after {
+    content: '→';
+    position: absolute;
+    right: 15px;
+    color: var(--purple2);
+    font-weight: bold;
+}
+/* --- TRACKING BUTTON VISIBILITY FIX --- */
+
+/* Force the Check Status button to have a solid purple background */
+.notification-dropdown .notify-search button,
+.notification-dropdown .notify-search .btn-primary {
+    background-color: var(--purple) !important;
+    color: white !important;
+    padding: 10px !important;
+    width: 100% !important;
+    border-radius: 6px !important;
+    margin-top: 10px !important;
+    display: block !important;
+    border: none !important;
+    cursor: pointer !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    font-weight: bold !important;
+}
+
+/* Hover effect so it feels like a button */
+.notification-dropdown .notify-search button:hover {
+    background-color: var(--purple2) !important;
+}
+
+/* Hide the result card (the white box below) until a search is actually made */
+#patientNotifyList {
+    display: none; /* Initially hidden */
+    background: white;
+    padding: 15px;
+    border-top: 1px solid #eee;
 }
