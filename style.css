@@ -1404,3 +1404,46 @@ tr:hover td{background:#fcf9fd}
     padding: 15px;
     border-top: 1px solid #eee;
 }
+/* --- SEARCH BAR MAGNIFYING GLASS LOGIC --- */
+.search-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+/* Positions the glass icon absolutely inside the relative wrapper */
+.search-wrapper i {
+    position: absolute;
+    left: 12px;
+    color: var(--muted);
+    pointer-events: none; /* Allows clicking "through" the icon to focus the input */
+    font-size: 0.9rem;
+}
+
+/* Styled input with padding on the left to make room for the icon */
+.search-wrapper input {
+    padding: 10px 10px 10px 35px !important; /* 35px padding-left is key */
+    width: 250px;
+    height: 42px; 
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    outline: none;
+    transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+.search-wrapper input:focus {
+    border-color: var(--purple2);
+    box-shadow: 0 0 0 3px rgba(120, 19, 138, 0.1);
+}
+
+/* Fix for the square buttons to match height */
+.icon-only-btn {
+    width: 42px;
+    height: 42px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border-radius: 8px;
+}
