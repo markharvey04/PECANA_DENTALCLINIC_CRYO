@@ -19,14 +19,30 @@
         <i class="fa-solid fa-tooth"></i> PECAÑA DENTAL
     </div>
 
-    <nav>
-        <button onclick="showPublicPage('home')">Home</button>
-        <button onclick="showPublicPage('services')">Services</button>
-        <button onclick="showPublicPage('appointment')">Appointment</button>
-        <button onclick="showPublicPage('queue-status')">Queue Status</button>
-        <button onclick="showPublicPage('patient-info')">Patient Information</button>
-        <button class="staff-btn" onclick="showLogin()">Login</button>
-    </nav>
+<nav>
+    <button onclick="showPublicPage('home')">Home</button>
+    <button onclick="showPublicPage('services')">Services</button>
+    <button onclick="showPublicPage('appointment')">Appointment</button>
+    <button onclick="showPublicPage('queue-status')">Queue Status</button>
+    
+    <!-- PERFECTLY ALIGNED NOTIFICATION BELL -->
+    <div class="notification-wrapper">
+        <i class="fa-solid fa-bell notification-icon" onclick="toggleNotifications('patientNotify')"></i>
+        
+        <div id="patientNotifyBox" class="notification-dropdown hidden">
+            <div class="notify-header">Appointment Status</div>
+            <div class="notify-search">
+                <input type="text" id="patientNotifySearch" placeholder="Enter Contact Number">
+                <button onclick="checkPatientNotifications()">Check Status</button>
+            </div>
+            <div id="patientNotifyList" class="notify-body">
+                <p style="padding:20px; text-align:center; color:#888;">Enter your number to see updates.</p>
+            </div>
+        </div>
+    </div>
+
+    <button class="staff-btn" onclick="showLogin()">Login</button>
+</nav>
 </header>
 
 <!-- HOME -->
@@ -284,9 +300,9 @@
         <span>Walk-In Queue</span>
     </button>
 
-    <button class="side-link" data-page="patients">
-        <i class="fa-solid fa-users"></i>
-        <span>Patient Records</span>
+    <button class="side-link" data-page="patients" onclick="openAddPatientModal()">
+    <i class="fa-solid fa-users"></i>
+    <span>Patient Records</span>
     </button>
 
     <button class="side-link" data-page="schedule">
@@ -320,33 +336,36 @@
 <main class="admin-main">
 
 <header class="admin-header">
-<div>
-    <h1 id="pageTitle">Dashboard</h1>
-</div>
-
-<!-- NEW CODE ADDED HERE -->
-<div class="admin-user-wrapper">
-    <div class="admin-user">
-        <i class="fa-solid fa-user-shield"></i> Administrator
+    <div>
+        <h1 id="pageTitle">Dashboard</h1>
     </div>
+
+    <div class="admin-user-wrapper">
+        <!-- ADMIN NOTIFICATION BELL (Added here) -->
+        <div class="notification-wrapper admin-notif">
+            <i class="fa-solid fa-bell notification-icon" onclick="toggleNotifications('adminNotify')"></i>
+            <!-- This badge shows the red number -->
+            <span id="adminNotifyBadge" class="notification-badge hidden">0</span>
+            
+            <!-- Admin Dropdown Box -->
+            <div id="adminNotifyBox" class="notification-dropdown hidden">
+                <div class="notify-header">Clinic Alerts</div>
+                <div id="adminNotifyList" class="notify-body">
+                    <!-- Notifications will be injected here by your JS -->
+                </div>
+            </div>
+        </div>
+
+        <div class="admin-user">
+            <i class="fa-solid fa-user-shield"></i> Administrator
+        </div>
+    </div>
+</header>
+    
 </header>
 <!-- DASHBOARD -->
 <section id="page-dashboard" class="admin-page active">
-<!-- VISUAL INSIGHTS SECTION -->
-<div class="dashboard-charts">
-<div class="content-card chart-card">
-    <h3>Patient Demographics</h3>
-    <canvas id="genderChart"></canvas>
-</div>
-<div class="content-card chart-card">
-    <h3>Service Popularity</h3>
-    <canvas id="serviceChart"></canvas>
-</div>
-<div class="content-card chart-card">
-    <h3>Inventory Health (Stock vs Min)</h3>
-    <canvas id="inventoryChart"></canvas>
-</div>
-</div>
+    <!-- STAT CARDS (Now at the top) -->
     <div class="dashboard-cards">
         <div class="stat-card">
             <i class="fa-solid fa-calendar-day"></i>
@@ -379,33 +398,39 @@
         </div>
     </div>
 
+    <!-- VISUAL INSIGHTS SECTION (Moved below stats) -->
+    <div class="dashboard-charts">
+        <div class="content-card chart-card">
+            <h3>Patient Demographics</h3>
+            <canvas id="genderChart"></canvas>
+        </div>
+        <div class="content-card chart-card">
+            <h3>Service Popularity</h3>
+            <canvas id="serviceChart"></canvas>
+        </div>
+        <div class="content-card chart-card">
+            <h3>Inventory Health (Stock vs Min)</h3>
+            <canvas id="inventoryChart"></canvas>
+        </div>
+    </div>
+
     <div class="content-card">
         <h2>Quick Access</h2>
-
         <div class="quick-grid">
             <button onclick="openAdminPage('appointments')">
-                <i class="fa-solid fa-calendar-check"></i>
-                Appointment Management
+                <i class="fa-solid fa-calendar-check"></i> Appointment Management
             </button>
-
             <button onclick="openAdminPage('appointmentQueue')">
-                <i class="fa-solid fa-list-ol"></i>
-                Appointment Queue
+                <i class="fa-solid fa-list-ol"></i> Appointment Queue
             </button>
-
             <button onclick="openAdminPage('walkinQueue')">
-                <i class="fa-solid fa-person-walking"></i>
-                Walk-In Queue
+                <i class="fa-solid fa-person-walking"></i> Walk-In Queue
             </button>
-
             <button onclick="openAdminPage('patients')">
-                <i class="fa-solid fa-users"></i>
-                Patient Records
+                <i class="fa-solid fa-users"></i> Patient Records
             </button>
-
             <button onclick="openAdminPage('schedule')">
-                <i class="fa-solid fa-calendar-days"></i>
-                Daily Schedule
+                <i class="fa-solid fa-calendar-days"></i> Daily Schedule
             </button>
         </div>
     </div>
@@ -418,10 +443,8 @@
                 <span id="forecastSummary">Inventory is sufficient.</span>
             </div>
         </div>
-
         <button onclick="openAdminPage('forecast')">View Forecast</button>
     </div>
-
 </section>
 
 <!-- APPOINTMENT MANAGEMENT -->
@@ -557,15 +580,10 @@
 
 <!-- PATIENT RECORDS -->
 <section id="page-patients" class="admin-page">
-
     <div class="page-actions">
         <div>
             <p>Manage registered clinic patients.</p>
         </div>
-
-        <button class="btn-primary" onclick="openAdminPage('addPatient')">
-            <i class="fa-solid fa-user-plus"></i> Add Patient
-        </button>
     </div>
 
     <div class="content-card table-card">
@@ -588,63 +606,31 @@
     </div>
 </section>
 
-<!-- ADD PATIENT -->
-<section id="page-addPatient" class="admin-page">
-
-    <div class="page-actions">
-        <div>
-            <p>Register a new patient.</p>
+<!-- ADD PATIENT POPUP -->
+<div id="addPatientModal" class="modal hidden">
+    <div class="modal-card">
+        <div class="modal-header">
+            <h2>Register New Patient</h2>
+            <button type="button" onclick="closeAddPatientModal()">×</button>
         </div>
+        <form id="patientForm" class="form-grid admin-form">
+            <div><label>Full Name</label><input id="patientName" required></div>
+            <div><label>Contact Number</label><input id="patientContact" required></div>
+            <div><label>Date of Birth</label><input type="date" id="patientDOB"></div>
+            <div>
+                <label>Gender</label>
+                <select id="patientGender">
+                    <option>Male</option><option>Female</option><option>Other</option>
+                </select>
+            </div>
+            <div class="full"><label>Address</label><input id="patientAddress"></div>
+            <div class="full form-buttons">
+                <button type="submit" class="btn-primary">Save Patient</button>
+                <button type="button" class="btn-outline" onclick="closeAddPatientModal()">Cancel</button>
+            </div>
+        </form>
     </div>
-
-    <form id="patientForm" class="content-card form-grid admin-form">
-
-        <div>
-            <label>Full Name</label>
-            <input id="patientName" required>
-        </div>
-
-        <div>
-            <label>Contact Number</label>
-            <input id="patientContact" required>
-        </div>
-
-        <div>
-            <label>Date of Birth</label>
-            <input type="date" id="patientDOB">
-        </div>
-
-        <div>
-            <label>Gender</label>
-            <select id="patientGender">
-                <option value="">Select</option>
-                <option>Male</option>
-                <option>Female</option>
-                <option>Other</option>
-            </select>
-        </div>
-
-        <div class="full">
-            <label>Address</label>
-            <input id="patientAddress">
-        </div>
-
-        <div>
-            <label>Emergency Contact</label>
-            <input id="patientEmergency">
-        </div>
-
-        <div>
-            <label>Dental Concern</label>
-            <input id="patientConcern">
-        </div>
-
-        <div class="full form-buttons">
-            <button class="btn-primary">Save Patient</button>
-            <button type="button" class="btn-outline" onclick="openAdminPage('patients')">Cancel</button>
-        </div>
-    </form>
-</section>
+</div>
 
 <!-- DAILY SCHEDULE -->
 <section id="page-schedule" class="admin-page">
@@ -693,7 +679,6 @@
                     <th>Material</th>
                     <th>Stock</th>
                     <th>Minimum</th>
-                    <th>Lead Time</th>
                     <th>Status</th>
                     <th>Actions</th>
                 </tr>
