@@ -1,4 +1,4 @@
-        const STORAGE={
+const STORAGE={
             patients:"pecana_patients",
             appointments:"pecana_appointments",
             appointmentQueue:"pecana_appointment_queue",
@@ -155,6 +155,18 @@
         }
 
         function logout(){ showPublicSite(); }
+
+        /* ================= SELECT SERVICE -> BOOK APPOINTMENT ================= */
+        // Wires up the "Book This Service" buttons on the public Services page.
+        // It jumps to the Appointment page and pre-fills the service dropdown,
+        // then focuses the Full Name field so the patient can continue right away.
+        function selectService(serviceName){
+            showPublicPage("appointment");
+            const select = document.getElementById("bookingService");
+            if(select) select.value = serviceName;
+            const nameField = document.getElementById("bookingName");
+            if(nameField) nameField.focus();
+        }
 
     /* ================= LOGIN ================= */
 
@@ -789,24 +801,32 @@ if (publicForm) {
         });
 
         function renderWalkinQueue(){
-            const container=document.getElementById("walkinQueueContainer");
-            if(!container)return;
-            if(!walkins.length){ container.innerHTML=`<div class="empty-state"><i class="fa-solid fa-person-walking"></i><strong>No walk-in patients.</strong><p>Use Add Walk-In to register a patient.</p></div>`; return; }
-            container.innerHTML=walkins.map(q=>`
-                <div class="queue-card">
-                    <div class="queue-number">${q.number}</div>
-                    <div class="queue-details">
-                        <h3>${esc(q.patientName)}</h3>
-                        <p>${esc(q.service)} · ${formatTime(q.time)}</p>
-                        <span class="badge ${statusClass(q.status)}">${q.status}</span>
-                    </div>
-                    <div class="queue-actions">
-                        ${q.status==="Waiting"?`<button class="action-btn primary" onclick="serveWalkin('${q.number}')">Serve</button><button class="action-btn danger" onclick="noShowWalkin('${q.number}')">No-show</button>`:""}
-                        ${q.status==="Serving"?`<button class="action-btn success" onclick="completeWalkin('${q.number}')">Complete</button>`:""}
-                    </div>
-                </div>
-            `).join("");
-        }
+    const container=document.getElementById("walkinQueueContainer");
+    if(!container)return;
+
+    // Only show active walk-ins — same behavior as the appointment queue
+    const queues = walkins.filter(q => q.status === "Waiting" || q.status === "Serving");
+
+    if(!queues.length){
+        container.innerHTML=`<div class="empty-state"><i class="fa-solid fa-person-walking"></i><strong>No walk-in patients.</strong><p>Use Add Walk-In to register a patient.</p></div>`;
+        return;
+    }
+
+    container.innerHTML=queues.map(q=>`
+        <div class="queue-card">
+            <div class="queue-number">${q.number}</div>
+            <div class="queue-details">
+                <h3>${esc(q.patientName)}</h3>
+                <p>${esc(q.service)} · ${formatTime(q.time)}</p>
+                <span class="badge ${statusClass(q.status)}">${q.status}</span>
+            </div>
+            <div class="queue-actions">
+                ${q.status==="Waiting"?`<button class="action-btn primary" onclick="serveWalkin('${q.number}')">Serve</button><button class="action-btn danger" onclick="noShowWalkin('${q.number}')">No-show</button>`:""}
+                ${q.status==="Serving"?`<button class="action-btn success" onclick="completeWalkin('${q.number}')">Complete</button>`:""}
+            </div>
+        </div>
+    `).join("");
+}
 
         function serveWalkin(number){
             const active=walkins.find(q=>q.status==="Serving");
@@ -1223,81 +1243,134 @@ document.getElementById("appointmentForm").addEventListener("submit", e => {
     }
 
     /* ================= PRINT CURRENT FILTERED VIEW (CLEAN VERSION) ================= */
-    function printFilteredReport() {
-        const title = document.getElementById("reportTableTitle").textContent;
-        const tableContent = document.querySelector("#page-reports table").outerHTML;
-        
-        const w = window.open('', '_blank');
-        w.document.write(`
-            <html>
-                <head>
-                    <title>Clinic Report</title>
-                    <style>
-                        /* 1. HIDE BROWSER HEADERS AND FOOTERS */
-                        @page {
-                            size: auto;
-                            margin: 0mm; /* This removes the Date, Title, and URL */
-                        }
+ function printFilteredReport() {
+    const title = document.getElementById("reportTableTitle").textContent;
+    const tableContent = document.querySelector("#page-reports table").outerHTML;
 
-                        body { 
-                            font-family: sans-serif; 
-                            padding: 20mm; /* Content margin */
-                            margin: 0;
-                            counter-reset: page; /* Initialize page counter */
-                        }
+    // Resolve the clinic logo to an absolute URL so it loads correctly in the print window
+    const logoEl = document.querySelector('.sidebar-brand .brand-logo-img');
+    const logoSrc = logoEl ? logoEl.src : '';
 
-                        /* 2. CREATE CUSTOM PAGE NUMBER (Simulates browser paging) */
-                        .page-footer {
-                            position: fixed;
-                            bottom: 10mm;
-                            right: 15mm;
-                            font-size: 11px;
-                            color: #777;
-                        }
-                        
-                        /* This adds the "1", "2", etc. at the bottom right */
-                        .page-footer::after {
-                            counter-increment: page;
-                            content: "Page " counter(page);
-                        }
+    const w = window.open('', '_blank');
+    w.document.write(`
+        <html>
+            <head>
+                <title>Pecaña Dental Clinic - ${esc(title)}</title>
+                <style>
+                    @page { size: auto; margin: 0mm; }
+                    *{ box-sizing:border-box; }
 
-                        /* 3. REPORT STYLING */
-                        h1 { color: #5b0b68; text-align:center; margin-top: 0; font-size: 24px; }
-                        h2 { border-bottom: 2px solid #5b0b68; padding-bottom: 8px; margin-top: 20px; font-size: 18px; }
-                        .gen-date { font-size: 12px; color: #555; margin-bottom: 20px; display: block; }
-                        
-                        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-                        th, td { border: 1px solid #ddd; padding: 10px; text-align: left; font-size: 12px; }
-                        th { background: #f8f8f8; color: #333; }
-                        .badge { font-weight: bold; }
-                        
-                        /* Ensures the footer doesn't overlap table content on long pages */
-                        table { page-break-inside: auto; }
-                        tr { page-break-inside: avoid; page-break-after: auto; }
-                    </style>
-                </head>
-                <body>
-                    <!-- The Footer div repeats on every printed page -->
-                    <div class="page-footer"></div>
+                    body {
+                        font-family: 'Segoe UI', Arial, sans-serif;
+                        padding: 18mm 16mm 22mm;
+                        margin: 0;
+                        color:#202124;
+                        counter-reset: page;
+                    }
 
-                    <h1>PECAÑA DENTAL CLINIC</h1>
-                    <h2>${title}</h2>
-                    <span class="gen-date">Report Generated: ${new Date().toLocaleString()}</span>
-                    
-                    ${tableContent}
+                    /* ===== LETTERHEAD ===== */
+                    .print-letterhead{
+                        display:flex;
+                        align-items:center;
+                        gap:16px;
+                        border-bottom:3px solid #5b0b68;
+                        padding-bottom:14px;
+                        margin-bottom:18px;
+                    }
 
-                    <script>
-                        window.onload = function() { 
-                            window.print(); 
-                            window.close(); 
-                        };
-                    </script>
-                </body>
-            </html>
-        `);
-        w.document.close();
-    }
+                    .print-letterhead img{
+                        width:56px;
+                        height:56px;
+                        object-fit:contain;
+                        border-radius:50%;
+                        flex-shrink:0;
+                    }
 
+                    .print-letterhead .clinic-name{
+                        font-size:22px;
+                        font-weight:800;
+                        color:#5b0b68;
+                        letter-spacing:.3px;
+                    }
+
+                    .print-letterhead .clinic-tagline{
+                        font-size:11px;
+                        color:#6b7280;
+                        margin-top:2px;
+                    }
+
+                    .print-meta{
+                        display:flex;
+                        justify-content:space-between;
+                        align-items:baseline;
+                        margin-bottom:16px;
+                    }
+
+                    .print-meta h2{ font-size:17px; color:#202124; margin:0; }
+                    .print-meta .gen-date{ font-size:11px; color:#6b7280; }
+
+                    /* ===== TABLE ===== */
+                    table { width: 100%; border-collapse: collapse; margin-top: 6px; }
+                    th, td { border: 1px solid #e5e0e7; padding: 10px; text-align: left; font-size: 12px; }
+                    th { background: #f6eafa; color: #5b0b68; text-transform:uppercase; letter-spacing:.4px; font-size:10.5px; }
+                    tr:nth-child(even) td{ background:#fbf8fc; }
+                    .badge { font-weight: bold; }
+
+                    table { page-break-inside: auto; }
+                    tr { page-break-inside: avoid; page-break-after: auto; }
+
+                    /* ===== FOOTER ===== */
+                    .page-footer {
+                        position: fixed;
+                        bottom: 8mm;
+                        left: 16mm;
+                        right: 16mm;
+                        display:flex;
+                        justify-content:space-between;
+                        font-size: 10px;
+                        color: #9aa0a6;
+                        border-top:1px solid #eee;
+                        padding-top:6px;
+                    }
+
+                    .page-footer .page-num::after {
+                        counter-increment: page;
+                        content: "Page " counter(page);
+                    }
+                </style>
+            </head>
+            <body>
+                <div class="print-letterhead">
+                    ${logoSrc ? `<img src="${logoSrc}" alt="Pecaña Dental Clinic logo">` : ""}
+                    <div>
+                        <div class="clinic-name">PECAÑA DENTAL CLINIC</div>
+                        <div class="clinic-tagline">Dental Clinic Management System · Official Report</div>
+                    </div>
+                </div>
+
+                <div class="print-meta">
+                    <h2>${esc(title)}</h2>
+                    <span class="gen-date">Generated: ${new Date().toLocaleString()}</span>
+                </div>
+
+                ${tableContent}
+
+                <div class="page-footer">
+                    <span></span>
+                    <span class="page-num"></span>
+                </div>
+
+                <script>
+                    window.onload = function() {
+                        window.print();
+                        window.close();
+                    };
+                <\/script>
+            </body>
+        </html>
+    `);
+    w.document.close();
+}
         /* ================= MASTER RENDER ================= */
 
 function renderAll(){
