@@ -70,55 +70,66 @@
             </div>
         </div>
 
-        <div class="hero-card">
+<div class="hero-card">
             <img src="images/assets/logo-icon.png" alt="Pecaña Dental Clinic logo" class="brand-logo-img hero">
             <h2>Your Smile Matters</h2>
             <p>Simple, organized and patient-centered dental care.</p>
         </div>
     </div>
+</nav>
 
-    <div class="stats">
-        <div><strong>5+</strong><span>Core Services</span></div>
-        <div><strong id="publicPatientCount">0</strong><span>Registered Patients</span></div>
-        <div><strong id="publicAppointmentCount">0</strong><span>Appointments</span></div>
-        <div><strong>1</strong><span>Trusted Clinic</span></div>
+<div class="section-spacer"></div>
+
+  <div class="section-title">
+    <span>DISCOVER</span>
+    <h2>DETAILS OF WHAT WE OFFER</h2>
+    <p>Quality dental care for healthier and brighter smile.</p>
+</div>
+
+<div class="service-grid">
+    <div class="service-card">
+        <i class="fa-solid fa-tooth"></i>
+        <h3>Dental Check-up</h3>
+        <p>
+            A routine oral examination to check the condition of your teeth and gums,
+            identify dental concerns, and recommend appropriate treatment.
+        </p>
     </div>
 
-    <div class="section-title">
-        <span>WHAT WE OFFER</span>
-        <h2>Our Services</h2>
+    <div class="service-card">
+        <i class="fa-solid fa-wand-magic-sparkles"></i>
+        <h3>Dental Cleaning</h3>
+        <p>
+            Professional cleaning that removes plaque, tartar, and surface stains
+            to help maintain clean and healthy teeth and gums.
+        </p>
     </div>
 
-    <div class="service-grid">
-        <div class="service-card">
-            <i class="fa-solid fa-tooth"></i>
-            <h3>Dental Check-up</h3>
-            <p>Routine oral examination and assessment.</p>
-        </div>
-        <div class="service-card">
-            <i class="fa-solid fa-sparkles"></i>
-            <h3>Dental Cleaning</h3>
-            <p>Professional cleaning and preventive care.</p>
-        </div>
-        <div class="service-card">
-            <i class="fa-solid fa-tooth"></i>
-            <h3>Tooth Restoration</h3>
-            <p>Restorative procedures for damaged teeth.</p>
-        </div>
-        <div class="service-card">
-            <i class="fa-solid fa-teeth"></i>
-            <h3>Tooth Extraction</h3>
-            <p>Safe and professionally managed extraction.</p>
-        </div>
+    <div class="service-card">
+        <i class="fa-solid fa-tooth"></i>
+        <h3>Tooth Restoration</h3>
+        <p>
+            Treatment for damaged, decayed, or weakened teeth to help restore
+            their function and improve their appearance.
+        </p>
     </div>
+
+    <div class="service-card">
+        <i class="fa-solid fa-teeth"></i>
+        <h3>Tooth Extraction</h3>
+        <p>
+            A professionally managed procedure for removing a damaged or
+            problematic tooth while prioritizing patient comfort and safety.
+        </p>
+    </div>
+</div>
 </section>
 
 <!-- SERVICES -->
 <section id="public-services" class="public-page">
     <div class="public-title">
-        <span>OUR SERVICES</span>
-        <h1>Dental Services</h1>
-        <p>Select a service to continue with an appointment.</p>
+        <span>OUR</span>
+        <h1>Dental Services</h1> <p>Select a service to continue with an appointment.</p>
     </div>
 
     <div class="service-grid large">
@@ -130,7 +141,7 @@
         </div>
 
         <div class="service-card">
-            <i class="fa-solid fa-sparkles"></i>
+            <i class="fa-solid fa-wand-magic-sparkles"></i>
             <h3>Dental Cleaning</h3>
             <p>Professional preventive cleaning.</p>
             <button onclick="selectService('Dental Cleaning')">Book This Service</button>
@@ -281,7 +292,8 @@
 
 <aside class="sidebar">
 
-    <div class="sidebar-brand">
+       <div class="sidebar-brand">
+        <img src="images/assets/logo-icon.png" alt="Pecaña Dental Clinic logo" class="brand-logo-img sidebar">
         <div>
             <strong>PECAÑA DENTAL SYSTEM</strong>
         </div>
@@ -876,6 +888,7 @@
                 <option value="female">Female Patients List</option>
                 <option value="completed">Completed Appointments</option>
                 <option value="noshow">No-Show Records</option>
+                <option value="walkin">Walk-In Records</option>
             </select>
 
             <button class="btn-primary" onclick="printFilteredReport()" style="padding: 10px 20px;">

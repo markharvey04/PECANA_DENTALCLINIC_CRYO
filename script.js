@@ -588,7 +588,11 @@ document.getElementById("patientForm").addEventListener("submit", e => {
             a.id.toLowerCase().includes(filter)
         );
 
-        const sorted = [...filtered].sort((a, b) => `${a.date}${a.time}`.localeCompare(`${b.date}${b.time}`));
+    const sorted = [...filtered].sort((a, b) => {
+    const numA = parseInt(String(a.id).replace(/\D/g, "")) || 0;
+    const numB = parseInt(String(b.id).replace(/\D/g, "")) || 0;
+    return numB - numA;
+});
         
         table.innerHTML = sorted.map(a => `
             <tr>
@@ -930,54 +934,91 @@ if (publicForm) {
             return false;
         }
 
-        /* ================= PREDICTIVE FORECAST ================= */
+/* ================= PREDICTIVE FORECAST ================= */
 
-        function getUpcoming(days=30){
-            const start=new Date();
-            start.setHours(0,0,0,0);
-            const end=new Date(start);
-            end.setDate(end.getDate()+days);
-            return appointments.filter(a=>{
-                if(a.status!=="Approved" && a.status!=="Pending")return false;
-                const date=new Date(a.date+"T00:00:00");
-                return date>=start&&date<=end;
-            });
+function getUpcoming(days=30){
+    const start=new Date();
+    start.setHours(0,0,0,0);
+    const end=new Date(start);
+    end.setDate(end.getDate()+days);
+    return appointments.filter(a=>{
+        if(a.status!=="Approved" && a.status!=="Pending")return false;
+        const date=new Date(a.date+"T00:00:00");
+        return date>=start&&date<=end;
+    });
+}
+
+function calculateForecast(){
+    const upcoming=getUpcoming(30);
+    const demand={};
+    upcoming.forEach(a=>{
+        const materials = BOM[a.service] || {};
+        Object.entries(materials).forEach(([name, qty]) => { demand[name] = (demand[name] || 0) + qty; });
+    });
+    return inventory.map(item=>{
+        const usage=demand[item.name]||0;
+        const projected=item.stock-usage;
+        const dailyRate = usage / 30;
+        const daysUntilStockout = dailyRate > 0 ? Math.floor(item.stock / dailyRate) : null;
+        return{ ...item, projectedUsage:usage, projectedStock:projected, warning:projected<=item.minimum, daysUntilStockout };
+    });
+}
+
+function formatDuration(days){
+    if (days < 14) {
+        return `${days} day${days===1?"":"s"}`;
+    }
+    if (days < 60) {
+        const weeks = Math.round(days / 7);
+        return `${weeks} week${weeks===1?"":"s"}`;
+    }
+    if (days < 365) {
+        const months = Math.round(days / 30);
+        return `${months} month${months===1?"":"s"}`;
+    }
+    const years = Math.round(days / 365);
+    return `${years} year${years===1?"":"s"}`;
+}
+
+function renderForecast(){
+    const forecast=calculateForecast();
+    const warnings=forecast.filter(x=>x.warning);
+    const upcoming=getUpcoming(30);
+    document.getElementById("forecastAppointments").textContent= upcoming.length;
+    document.getElementById("forecastMaterials").textContent= inventory.length;
+    document.getElementById("forecastWarnings").textContent= warnings.length;
+    const results=document.getElementById("forecastResults");
+    results.innerHTML=forecast.map(x=>{
+        let daysLabel = "";
+        if (x.daysUntilStockout !== null) {
+            const timeText = formatDuration(x.daysUntilStockout);
+            if (x.daysUntilStockout <= 0) {
+                daysLabel = `<span class="stockout-tag critical">Out of stock now</span>`;
+            } else if (x.daysUntilStockout <= x.leadTime) {
+                daysLabel = `<span class="stockout-tag critical">Runs out in ~${timeText} (before restock arrives)</span>`;
+            } else {
+                daysLabel = `<span class="stockout-tag">Runs out in ~${timeText}</span>`;
+            }
+        } else {
+            daysLabel = `<span class="stockout-tag ok">No active usage — stock is stable</span>`;
         }
 
-        function calculateForecast(){
-            const upcoming=getUpcoming(30);
-            const demand={};
-            upcoming.forEach(a=>{
-                const materials = BOM[a.service] || {};
-                Object.entries(materials).forEach(([name, qty]) => { demand[name] = (demand[name] || 0) + qty; });
-            });
-            return inventory.map(item=>{
-                const usage=demand[item.name]||0;
-                const projected=item.stock-usage;
-                return{ ...item, projectedUsage:usage, projectedStock:projected, warning:projected<=item.minimum };
-            });
-        }
+        return `
+        <div class="forecast-result ${x.warning?"warning":""}">
+            <strong>${esc(x.name)}</strong>
+            <span>Current Stock: ${x.stock} · Projected Usage: ${x.projectedUsage} · Remaining: ${x.projectedStock} · Supplier Lead Time: ${x.leadTime} days</span>
+            ${daysLabel}
+            ${x.warning?`<button class="action-btn danger" onclick="suggestRestock('${esc(x.name)}',${x.projectedStock},${x.leadTime})">Suggest Restock</button>`:`<span>✓ Sufficient stock</span>`}
+        </div>
+    `;
+    }).join("");
+    document.getElementById("forecastSummary").textContent= warnings.length?`${warnings.length} material(s) require restocking.`:"Inventory is sufficient for projected demand.";
+}
 
-        function renderForecast(){
-            const forecast=calculateForecast();
-            const warnings=forecast.filter(x=>x.warning);
-            const upcoming=getUpcoming(30);
-            document.getElementById("forecastAppointments").textContent= upcoming.length;
-            document.getElementById("forecastMaterials").textContent= inventory.length;
-            document.getElementById("forecastWarnings").textContent= warnings.length;
-            const results=document.getElementById("forecastResults");
-            results.innerHTML=forecast.map(x=>`
-                <div class="forecast-result ${x.warning?"warning":""}">
-                    <strong>${esc(x.name)}</strong>
-                    <span>Current Stock: ${x.stock} · Projected Usage: ${x.projectedUsage} · Remaining: ${x.projectedStock} · Supplier Lead Time: ${x.leadTime} days</span>
-                    ${x.warning?`<button class="action-btn danger" onclick="suggestRestock('${esc(x.name)}',${x.projectedStock},${x.leadTime})">Suggest Restock</button>`:`<span>✓ Sufficient stock</span>`}
-                </div>
-            `).join("");
-            document.getElementById("forecastSummary").textContent= warnings.length?`${warnings.length} material(s) require restocking.`:"Inventory is sufficient for projected demand.";
-        }
-
-        function suggestRestock(name,stock,lead){ alert(`RESTOCK SUGGESTION\n\nMaterial: ${name}\nProjected Remaining: ${stock}\nSupplier Lead Time: ${lead} days\n\nRecommendation: Add ${name} to the next purchase order.`); }
-
+function suggestRestock(name,stock,lead){
+    alert(`RESTOCK SUGGESTION\n\nMaterial: ${name}\nProjected Remaining: ${stock}\nSupplier Lead Time: ${lead} days\n\nRecommendation: Add ${name} to the next purchase order.`);
+    openAdminPage('inventory');
+}
         /* ================= PUBLIC QUEUE ================= */
 
         function renderPublicQueues(){
@@ -1165,7 +1206,7 @@ document.getElementById("appointmentForm").addEventListener("submit", e => {
             }
         }
 
-    /* ================= UPDATED REPORTS RENDER ================= */
+   /* ================= UPDATED REPORTS RENDER ================= */
     function renderReports() {
         // 1. Update Stat Cards
         const totalCompleted = appointmentQueue.filter(q => q.status === "Completed").length + walkins.filter(q => q.status === "Completed").length;
@@ -1206,9 +1247,9 @@ document.getElementById("appointmentForm").addEventListener("submit", e => {
             tableHeader.innerHTML = `<tr><th>Date</th><th>Type</th><th>Patient</th><th>Service</th><th>Status</th></tr>`;
 
             const allHistory = [
-                ...appointments.map(a => ({ date: a.date, type: 'Appt', name: a.patientName, svc: a.service, stat: a.status })),
-                ...walkins.map(w => ({ date: w.date, type: 'Walkin', name: w.patientName, svc: w.service, stat: w.status }))
-            ].filter(item => item.stat === status).sort((a,b) => new Date(b.date) - new Date(a.date));
+                ...appointments.map(a => ({ date: a.date, time: a.time || "00:00", type: 'Appt', name: a.patientName, svc: a.service, stat: a.status })),
+                ...walkins.map(w => ({ date: w.date, time: w.time || "00:00", type: 'Walkin', name: w.patientName, svc: w.service, stat: w.status }))
+            ].filter(item => item.stat === status).sort((a,b) => new Date(`${b.date}T${b.time}`) - new Date(`${a.date}T${a.time}`));
 
             tableBody.innerHTML = allHistory.length ? allHistory.map(r => `
                 <tr>
@@ -1220,15 +1261,33 @@ document.getElementById("appointmentForm").addEventListener("submit", e => {
                 </tr>
             `).join("") : `<tr><td colspan="5">No ${status} records found.</td></tr>`;
 
+        } else if (filter === "walkin") {
+            // --- WALK-IN RECORDS ---
+            tableTitle.textContent = "Walk-In Patient Records";
+            tableHeader.innerHTML = `<tr><th>Queue #</th><th>Date</th><th>Time</th><th>Patient</th><th>Service</th><th>Status</th></tr>`;
+
+            const sortedWalkins = [...walkins].sort((a,b) => new Date(`${b.date}T${b.time||"00:00"}`) - new Date(`${a.date}T${a.time||"00:00"}`));
+
+            tableBody.innerHTML = sortedWalkins.length ? sortedWalkins.map(w => `
+                <tr>
+                    <td>${esc(w.number)}</td>
+                    <td>${formatDate(w.date)}</td>
+                    <td>${formatTime(w.time)}</td>
+                    <td><strong>${esc(w.patientName)}</strong></td>
+                    <td>${esc(w.service || "-")}</td>
+                    <td><span class="badge ${statusClass(w.status)}">${w.status}</span></td>
+                </tr>
+            `).join("") : `<tr><td colspan="6">No walk-in records found.</td></tr>`;
+
         } else {
             // --- DEFAULT: RECENT ACTIVITY ---
             tableTitle.textContent = "Recent Activity Log";
             tableHeader.innerHTML = `<tr><th>Date</th><th>Type</th><th>Patient</th><th>Service</th><th>Status</th></tr>`;
 
             const allHistory = [
-                ...appointments.map(a => ({ date: a.date, type: 'Appt', name: a.patientName, svc: a.service, stat: a.status })),
-                ...walkins.map(w => ({ date: w.date, type: 'Walkin', name: w.patientName, svc: w.service, stat: w.status }))
-            ].sort((a,b) => new Date(b.date) - new Date(a.date)).slice(0, 20);
+                ...appointments.map(a => ({ date: a.date, time: a.time || "00:00", type: 'Appt', name: a.patientName, svc: a.service, stat: a.status })),
+                ...walkins.map(w => ({ date: w.date, time: w.time || "00:00", type: 'Walkin', name: w.patientName, svc: w.service, stat: w.status }))
+            ].sort((a,b) => new Date(`${b.date}T${b.time}`) - new Date(`${a.date}T${a.time}`)).slice(0, 30);
 
             tableBody.innerHTML = allHistory.map(r => `
                 <tr>
@@ -1243,7 +1302,7 @@ document.getElementById("appointmentForm").addEventListener("submit", e => {
     }
 
     /* ================= PRINT CURRENT FILTERED VIEW (CLEAN VERSION) ================= */
- function printFilteredReport() {
+function printFilteredReport() {
     const title = document.getElementById("reportTableTitle").textContent;
     const tableContent = document.querySelector("#page-reports table").outerHTML;
 
@@ -1356,8 +1415,8 @@ document.getElementById("appointmentForm").addEventListener("submit", e => {
                 ${tableContent}
 
                 <div class="page-footer">
-                    <span></span>
-                    <span class="page-num"></span>
+                <span></span>
+                <span class="page-num"></span>
                 </div>
 
                 <script>
@@ -1371,6 +1430,7 @@ document.getElementById("appointmentForm").addEventListener("submit", e => {
     `);
     w.document.close();
 }
+
         /* ================= MASTER RENDER ================= */
 
 function renderAll(){
