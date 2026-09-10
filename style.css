@@ -366,19 +366,26 @@ textarea{
     overflow-y:auto;
     z-index:20;
 }
-
 .sidebar-brand{
     display:flex;
+    flex-direction:column;
     align-items:center;
+    text-align:center;
     gap:10px;
-    padding:14px 15px 22px;
+    padding:20px 15px 25px;
 }
 
-.sidebar-brand i{font-size:25px}
+.sidebar-brand .brand-logo-img.sidebar{
+    width:56px;
+    height:56px;
+    flex-shrink:0;
+    box-shadow:0 4px 12px rgba(0,0,0,.3);
+}
 
 .sidebar-brand strong{
-    display:block;
-    font-size:.9rem;
+    font-size:.95rem;
+    letter-spacing:.5px;
+    line-height:1.3;
 }
 
 .sidebar-brand small{
@@ -1403,4 +1410,418 @@ tr:hover td{background:#fcf9fd}
     background: white;
     padding: 15px;
     border-top: 1px solid #eee;
+}
+/* --- SEARCH BAR MAGNIFYING GLASS LOGIC --- */
+.search-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+/* Positions the glass icon absolutely inside the relative wrapper */
+.search-wrapper i {
+    position: absolute;
+    left: 12px;
+    color: var(--muted);
+    pointer-events: none; /* Allows clicking "through" the icon to focus the input */
+    font-size: 0.9rem;
+}
+
+/* Styled input with padding on the left to make room for the icon */
+.search-wrapper input {
+    padding: 10px 10px 10px 35px !important; /* 35px padding-left is key */
+    width: 250px;
+    height: 42px; 
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    outline: none;
+    transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+.search-wrapper input:focus {
+    border-color: var(--purple2);
+    box-shadow: 0 0 0 3px rgba(120, 19, 138, 0.1);
+}
+
+/* Fix for the square buttons to match height */
+.icon-only-btn {
+    width: 42px;
+    height: 42px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border-radius: 8px;
+}
+
+/* =====================================================================
+   PROFESSIONAL VISUAL REFRESH
+   (Additive only — no structural classes changed, no JS-driven
+   selectors touched. Safe to layer on top of the rules above.)
+   ===================================================================== */
+
+/* ---------- Typography ---------- */
+body{
+    font-family:'Inter','Segoe UI',Arial,sans-serif;
+    -webkit-font-smoothing:antialiased;
+    text-rendering:optimizeLegibility;
+}
+
+h1,h2,h3,
+.public-logo,
+.sidebar-brand strong,
+.stat-card strong,
+.queue-number,
+.hero h1,
+.btn-primary,
+.btn-outline{
+    font-family:'Poppins','Segoe UI',Arial,sans-serif;
+}
+
+.hero h1{
+    font-weight:700;
+    letter-spacing:-0.5px;
+}
+
+.section-title h2,
+.public-title h1,
+.content-card h2,
+.page-actions h2{
+    font-weight:700;
+    letter-spacing:-0.3px;
+}
+
+/* ---------- Brand logo image (header / sidebar / login) ---------- */
+.brand-logo-img{
+    display:inline-block;
+    vertical-align:middle;
+    object-fit:cover;
+    border-radius:50%;
+    background:#ffffff22;
+}
+
+.public-logo{
+    display:inline-flex;
+    align-items:center;
+    gap:10px;
+}
+
+.public-logo .brand-logo-img{
+    width:36px;
+    height:36px;
+}
+
+.sidebar-brand{
+    gap:12px;
+}
+
+.sidebar-brand .brand-logo-img.sidebar{
+    width:40px;
+    height:40px;
+    flex-shrink:0;
+    box-shadow:0 2px 8px rgba(0,0,0,.25);
+}
+
+.login-logo{
+    display:flex;
+    justify-content:center;
+    margin-bottom:6px;
+}
+
+.login-logo .brand-logo-img.login{
+    width:78px;
+    height:78px;
+    box-shadow:0 6px 18px rgba(91,11,104,.28);
+    border:3px solid var(--light-purple);
+}
+
+/* ---------- Header polish ---------- */
+.public-header{
+    background:linear-gradient(120deg,var(--purple) 0%,var(--purple2) 100%);
+    box-shadow:0 2px 14px rgba(91,11,104,.18);
+    position:sticky;
+    top:0;
+    z-index:50;
+}
+
+.public-header nav button{
+    font-weight:600;
+    font-size:.92rem;
+    transition:background .2s ease, transform .15s ease;
+}
+
+.public-header nav button:hover{
+    transform:translateY(-1px);
+}
+
+.public-header nav .staff-btn{
+    font-weight:700;
+    box-shadow:0 3px 10px rgba(0,0,0,.15);
+}
+
+/* ---------- Buttons ---------- */
+.btn-primary,
+.btn-outline{
+    transition:transform .15s ease, box-shadow .15s ease, background .2s ease;
+    letter-spacing:.2px;
+}
+
+.btn-primary{
+    box-shadow:0 4px 12px rgba(91,11,104,.22);
+}
+
+.btn-primary:hover{
+    transform:translateY(-2px);
+    box-shadow:0 8px 18px rgba(91,11,104,.3);
+}
+
+.btn-outline:hover{
+    transform:translateY(-2px);
+}
+
+.action-btn{
+    transition:filter .15s ease, transform .15s ease;
+}
+
+.action-btn:hover{
+    filter:brightness(1.08);
+    transform:translateY(-1px);
+}
+
+/* ---------- Cards: consistent elevation + refined borders ---------- */
+.hero-card,
+.stats,
+.service-card,
+.form-card,
+.content-card,
+.public-queue-card,
+.info-box,
+.stat-card,
+.chart-card,
+.queue-card,
+.forecast-stat,
+.report-card,
+.table-card,
+.login-card{
+    border:1px solid rgba(15,15,20,.05);
+}
+/* Service Cards */
+.service-card {
+    text-align: center;
+}
+
+.service-card h3 {
+    margin: 12px 0 8px;
+}
+
+.service-card p {
+    color: var(--muted);
+    line-height: 1.5;
+    margin: 0 auto;
+    max-width: 280px;
+}
+
+.service-card,
+.stat-card,
+.chart-card,
+.report-card{
+    transition:transform .18s ease, box-shadow .18s ease;
+}
+
+.service-card:hover,
+.stat-card:hover,
+.chart-card:hover{
+    transform:translateY(-4px);
+    box-shadow:0 10px 26px rgba(91,11,104,.10);
+}
+
+.hero-card{
+    border-top:4px solid var(--purple2);
+}
+
+/* ---------- Sidebar polish ---------- */
+.sidebar{
+    background:linear-gradient(180deg,var(--purple) 0%,#4a0954 100%);
+    box-shadow:2px 0 14px rgba(0,0,0,.12);
+}
+
+.side-link{
+    font-weight:500;
+    transition:background .18s ease, padding-left .18s ease;
+}
+
+.side-link:hover{
+    padding-left:19px;
+}
+
+.side-link.active{
+    box-shadow:inset 3px 0 0 #fff;
+    font-weight:600;
+}
+
+/* ---------- Admin header ---------- */
+.admin-header h1{
+    font-weight:700;
+    letter-spacing:-0.3px;
+}
+
+.admin-user{
+    border:1px solid #eee;
+    font-weight:600;
+    font-size:.85rem;
+}
+
+/* ---------- Tables ---------- */
+th{
+    font-weight:700;
+    letter-spacing:.3px;
+    text-transform:uppercase;
+    font-size:.72rem;
+    color:var(--purple2);
+    border-bottom:2px solid #f0e6f2;
+}
+
+tr:hover td{
+    background:#faf3fb;
+}
+
+/* ---------- Badges refined with dot indicators ---------- */
+.badge{
+    letter-spacing:.2px;
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+}
+
+.badge::before{
+    content:"";
+    width:6px;
+    height:6px;
+    border-radius:50%;
+    background:currentColor;
+    display:inline-block;
+}
+
+/* ---------- Login page polish ---------- */
+.login-page{
+    background:
+        radial-gradient(circle at 15% 20%, rgba(255,255,255,.08), transparent 40%),
+        linear-gradient(135deg,var(--purple),var(--purple2));
+}
+
+.login-card{
+    border-top:5px solid var(--purple2);
+}
+
+.login-card h1{
+    font-family:'Poppins','Segoe UI',Arial,sans-serif;
+    font-weight:700;
+}
+
+/* ---------- Modals ---------- */
+.modal{
+    backdrop-filter:blur(2px);
+}
+
+.modal-card{
+    box-shadow:0 25px 60px rgba(0,0,0,.28);
+    border:1px solid rgba(0,0,0,.04);
+}
+
+.modal-header h2{
+    font-family:'Poppins','Segoe UI',Arial,sans-serif;
+    font-weight:700;
+    color:var(--purple);
+}
+
+/* ---------- Forms ---------- */
+input,select,textarea{
+    transition:border-color .18s ease, box-shadow .18s ease;
+}
+
+input:focus,select:focus,textarea:focus{
+    outline:none;
+    border-color:var(--purple2);
+    box-shadow:0 0 0 3px rgba(120,19,138,.12);
+}
+
+/* ---------- Scrollbar (webkit) ---------- */
+::-webkit-scrollbar{
+    width:10px;
+    height:10px;
+}
+
+::-webkit-scrollbar-track{
+    background:transparent;
+}
+
+::-webkit-scrollbar-thumb{
+    background:#d8c2de;
+    border-radius:10px;
+}
+
+::-webkit-scrollbar-thumb:hover{
+    background:var(--purple2);
+}
+
+/* ---------- Section title accent ---------- */
+.section-title span,
+.public-title span{
+    position:relative;
+    padding-bottom:6px;
+}
+.section-spacer {
+    height: 120px;
+}
+
+/* ---------- Empty states ---------- */
+.empty-state{
+    border:1px dashed #e6d5ea;
+}
+.sidebar .sidebar-brand{
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    text-align: center !important;
+    width: 100%;
+    padding: 14px 15px 20px !important;
+    gap: 0 !important;
+}
+
+.sidebar .sidebar-brand .brand-logo-img.sidebar{
+    display: block !important;
+    float: none !important;
+    position: static !important;
+    width: 72px !important;
+    height: 72px !important;
+    margin: 0 auto 8px auto !important;
+}
+
+.sidebar .sidebar-brand strong{
+    display: block;
+    width: 100%;
+    text-align: center;
+    line-height: 1.3;
+}
+.stockout-tag{
+    display: inline-block;
+    font-size: .78rem;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 6px;
+    margin: 6px 0;
+    background: #fff3d6;
+    color: var(--yellow);
+}
+
+.stockout-tag.critical{
+    background: #ffe0e0;
+    color: var(--red);
+}
+
+.stockout-tag.ok{
+    background: #dff5e8;
+    color: var(--green);
 }

@@ -1,22 +1,27 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <!-- Load Chart.js for Graphics -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>Pecaña Dental Clinic Management System</title>
+<link rel="icon" type="image/png" href="images/assets/logo-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 </head>
 <body>
-
 <!-- ================= PUBLIC WEBSITE ================= -->
 <div id="publicApp">
 
 <header class="public-header">
     <div class="public-logo" onclick="showPublicPage('home')">
-        <i class="fa-solid fa-tooth"></i> PECAÑA DENTAL
+        <img src="images/assets/logo-icon.png" alt="Pecaña Dental Clinic logo" class="brand-logo-img">
+                <div>
+            <strong>PECAÑA DENTAL</strong>
+        </div>
     </div>
 
 <nav>
@@ -52,9 +57,7 @@
             <span class="eyebrow">TRUSTED DENTAL CARE SINCE DAY ONE</span>
             <h1>Pecaña<br><span>Dental Clinic</span></h1>
             <p>
-                Pecaña Dental Clinic Management System provides organized
-                appointment scheduling, separate patient queues, digital
-                patient records, and predictive inventory monitoring.
+                Pecaña Dental Clinic Management System provides patients with an easy and convenient way to book appointments, check their queue status, and stay informed about their dental visits.
             </p>
 
             <div class="hero-buttons">
@@ -67,48 +70,70 @@
             </div>
         </div>
 
-        <div class="hero-card">
-            <i class="fa-solid fa-tooth"></i>
+<div class="hero-card">
+            <img src="images/assets/logo-icon.png" alt="Pecaña Dental Clinic logo" class="brand-logo-img hero">
             <h2>Your Smile Matters</h2>
             <p>Simple, organized and patient-centered dental care.</p>
         </div>
     </div>
 
-    <div class="section-title">
-        <span>WHAT WE OFFER</span>
-        <h2>Our Services</h2>
+    <div class="stats">
+        <div><strong>5+</strong><span>Core Services</span></div>
+        <div><strong id="publicPatientCount">0</strong><span>Registered Patients</span></div>
+        <div><strong id="publicAppointmentCount">0</strong><span>Appointments</span></div>
+        <div><strong>1</strong><span>Trusted Clinic</span></div>
     </div>
 
-    <div class="service-grid">
-        <div class="service-card">
-            <i class="fa-solid fa-tooth"></i>
-            <h3>Dental Check-up</h3>
-            <p>Routine oral examination and assessment.</p>
-        </div>
-        <div class="service-card">
-            <i class="fa-solid fa-sparkles"></i>
-            <h3>Dental Cleaning</h3>
-            <p>Professional cleaning and preventive care.</p>
-        </div>
-        <div class="service-card">
-            <i class="fa-solid fa-tooth"></i>
-            <h3>Tooth Restoration</h3>
-            <p>Restorative procedures for damaged teeth.</p>
-        </div>
-        <div class="service-card">
-            <i class="fa-solid fa-teeth"></i>
-            <h3>Tooth Extraction</h3>
-            <p>Safe and professionally managed extraction.</p>
-        </div>
+  <div class="section-title">
+    <span>DISCOVER</span>
+    <h2>DETAILS OF WHAT WE OFFER</h2>
+    <p>Quality dental care for healthier and brighter smile.</p>
+</div>
+
+<div class="service-grid">
+    <div class="service-card">
+        <i class="fa-solid fa-tooth"></i>
+        <h3>Dental Check-up</h3>
+        <p>
+            A routine oral examination to check the condition of your teeth and gums,
+            identify dental concerns, and recommend appropriate treatment.
+        </p>
     </div>
+
+    <div class="service-card">
+        <i class="fa-solid fa-wand-magic-sparkles"></i>
+        <h3>Dental Cleaning</h3>
+        <p>
+            Professional cleaning that removes plaque, tartar, and surface stains
+            to help maintain clean and healthy teeth and gums.
+        </p>
+    </div>
+
+    <div class="service-card">
+        <i class="fa-solid fa-tooth"></i>
+        <h3>Tooth Restoration</h3>
+        <p>
+            Treatment for damaged, decayed, or weakened teeth to help restore
+            their function and improve their appearance.
+        </p>
+    </div>
+
+    <div class="service-card">
+        <i class="fa-solid fa-teeth"></i>
+        <h3>Tooth Extraction</h3>
+        <p>
+            A professionally managed procedure for removing a damaged or
+            problematic tooth while prioritizing patient comfort and safety.
+        </p>
+    </div>
+</div>
 </section>
 
 <!-- SERVICES -->
 <section id="public-services" class="public-page">
     <div class="public-title">
-        <span>OUR SERVICES</span>
-        <h1>Dental Services</h1>
-        <p>Select a service to continue with an appointment.</p>
+        <span>OUR</span>
+        <h1>Dental Services</h1> <p>Select a service to continue with an appointment.</p>
     </div>
 
     <div class="service-grid large">
@@ -120,7 +145,7 @@
         </div>
 
         <div class="service-card">
-            <i class="fa-solid fa-sparkles"></i>
+            <i class="fa-solid fa-wand-magic-sparkles"></i>
             <h3>Dental Cleaning</h3>
             <p>Professional preventive cleaning.</p>
             <button onclick="selectService('Dental Cleaning')">Book This Service</button>
@@ -245,7 +270,7 @@
 
 <div id="loginPage" class="login-page hidden">
     <div class="login-card">
-        <div class="login-logo"><i class="fa-solid fa-tooth"></i></div>
+        <div class="login-logo"><img src="images/assets/logo-icon.png" alt="Pecaña Dental Clinic logo" class="brand-logo-img login"></div>
         <h1>Login</h1>
         <p>Pecaña Dental Clinic Management System</p>
 
@@ -271,8 +296,8 @@
 
 <aside class="sidebar">
 
-    <div class="sidebar-brand">
-        <i class="fa-solid fa-tooth"></i>
+       <div class="sidebar-brand">
+        <img src="images/assets/logo-icon.png" alt="Pecaña Dental Clinic logo" class="brand-logo-img sidebar">
         <div>
             <strong>PECAÑA DENTAL SYSTEM</strong>
         </div>
@@ -349,9 +374,8 @@
             
             <!-- Admin Dropdown Box -->
             <div id="adminNotifyBox" class="notification-dropdown hidden">
-                <div class="notify-header">Clinic Alerts</div>
+                <div class="notify-header">Clinic Notifications</div>
                 <div id="adminNotifyList" class="notify-body">
-                    <!-- Notifications will be injected here by your JS -->
                 </div>
             </div>
         </div>
@@ -432,6 +456,9 @@
             <button onclick="openAdminPage('schedule')">
                 <i class="fa-solid fa-calendar-days"></i> Daily Schedule
             </button>
+            <button onclick="openAdminPage('reports')">
+                <i class="fa-solid fa-file-lines"></i> Reports
+            </button>
         </div>
     </div>
 
@@ -449,16 +476,22 @@
 
 <!-- APPOINTMENT MANAGEMENT -->
 <section id="page-appointments" class="admin-page">
+  <div class="page-actions">
+    <div>
+        <p>Manage scheduled dental appointments.</p>
+    </div>
 
-    <div class="page-actions">
-        <div>
-            <p>Manage scheduled dental appointments.</p>
+    <div style="display: flex; gap: 10px; align-items: center;">
+        <div class="search-wrapper">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" id="appointmentSearch" placeholder="Search patient name..." onkeyup="renderAppointments()">
         </div>
-
-        <button class="btn-primary" onclick="openAdminPage('addAppointment')">
-            <i class="fa-solid fa-plus"></i> Create Appointment
+        
+        <button class="btn-primary icon-only-btn" onclick="openAppointmentModal()" title="Create New Appointment">
+            <i class="fa-solid fa-calendar-plus"></i>
         </button>
     </div>
+</div>
 
     <div class="content-card table-card">
         <div class="table-wrap">
@@ -480,6 +513,61 @@
     </div>
 </section>
 
+<!-- APPOINTMENT POPUP (MODAL) -->
+<div id="appointmentModal" class="modal hidden">
+    <div class="modal-card">
+        <div class="modal-header">
+            <h2>Create New Appointment</h2>
+            <button type="button" onclick="closeAppointmentModal()">×</button>
+        </div>
+        <form id="adminAppointmentForm" class="form-grid admin-form">
+            <div class="full">
+                <label>Select Patient</label>
+                <select id="adminAppointmentPatient" required></select>
+            </div>
+
+            <div>
+                <label>Date</label>
+                <input type="date" id="adminAppointmentDate" required>
+            </div>
+
+            <div>
+                <label>Time</label>
+                <input type="time" id="adminAppointmentTime" min="07:00" max="20:00" required>
+            </div>
+
+            <div class="full">
+                <label>Dental Service</label>
+                <select id="adminAppointmentService" required onchange="updateMaterialPrediction()">
+                    <option value="">Select service</option>
+                    <option>Dental Check-up</option>
+                    <option>Dental Cleaning</option>
+                    <option>Tooth Restoration</option>
+                    <option>Tooth Extraction</option>
+                </select>
+            </div>
+
+            <!-- Insight Card -->
+            <div id="materialInsightCard" class="insight-card hidden full">
+                <div class="insight-header">
+                    <div class="insight-title">
+                        <i class="fa-solid fa-microchip"></i>
+                        <span>Clinical Supply Insight</span>
+                    </div>
+                    <div class="insight-badge" id="stockStatusBadge">Checking Stock...</div>
+                </div>
+                <div class="insight-content">
+                    <div id="predictionList" class="prediction-list"></div>
+                </div>
+            </div>
+
+            <div class="full form-buttons" style="margin-top: 20px;">
+                <button type="submit" class="btn-primary">Create Appointment</button>
+                <button type="button" class="btn-outline" onclick="closeAppointmentModal()">Cancel</button>
+            </div>
+        </form>
+    </div>
+</div>
 <!-- CREATE APPOINTMENT -->
 <section id="page-addAppointment" class="admin-page">
 <div class="page-actions">
@@ -506,7 +594,6 @@
 
     <div class="full">
         <label>Dental Service</label>
-        <!-- Added onchange event here -->
         <select id="adminAppointmentService" required onchange="updateMaterialPrediction()">
             <option value="">Select service</option>
             <option>Dental Check-up</option>
@@ -516,7 +603,7 @@
         </select>
     </div>
 
-    <!-- NEW: Professional Insight Card -->
+    <!-- Insight Card -->
     <div id="materialInsightCard" class="insight-card hidden">
         <div class="insight-header">
             <div class="insight-title">
@@ -528,7 +615,6 @@
         <div class="insight-content">
             <p class="insight-desc">The system has predicted the following material requirements for this procedure:</p>
             <div id="predictionList" class="prediction-list">
-                <!-- Items generated by JavaScript -->
             </div>
         </div>
     </div>
@@ -584,6 +670,18 @@
         <div>
             <p>Manage registered clinic patients.</p>
         </div>
+        <div style="display: flex; gap: 10px; align-items: center;">
+            
+            <!-- ADDED SEARCH WRAPPER STRUCTURE HERE -->
+            <div class="search-wrapper">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                <input type="text" id="patientSearch" placeholder="Search patient name..." onkeyup="renderPatients()">
+            </div>
+
+            <button class="btn-primary icon-only-btn" onclick="openAddPatientModal()" title="Register New Patient">
+                <i class="fa-solid fa-user-plus"></i>
+            </button>
+        </div>
     </div>
 
     <div class="content-card table-card">
@@ -605,6 +703,61 @@
         </div>
     </div>
 </section>
+<!-- APPOINTMENT POPUP (MODAL) -->
+<div id="appointmentModal" class="modal hidden">
+    <div class="modal-card">
+        <div class="modal-header">
+            <h2>Create New Appointment</h2>
+            <button type="button" onclick="closeAppointmentModal()">×</button>
+        </div>
+        <form id="adminAppointmentForm" class="form-grid admin-form">
+            <div class="full">
+                <label>Select Patient</label>
+                <select id="adminAppointmentPatient" required></select>
+            </div>
+
+            <div>
+                <label>Date</label>
+                <input type="date" id="adminAppointmentDate" required>
+            </div>
+
+            <div>
+                <label>Time</label>
+                <input type="time" id="adminAppointmentTime" min="07:00" max="20:00" required>
+            </div>
+
+            <div class="full">
+                <label>Dental Service</label>
+                <select id="adminAppointmentService" required onchange="updateMaterialPrediction()">
+                    <option value="">Select service</option>
+                    <option>Dental Check-up</option>
+                    <option>Dental Cleaning</option>
+                    <option>Tooth Restoration</option>
+                    <option>Tooth Extraction</option>
+                </select>
+            </div>
+
+            <!-- Insight Card -->
+            <div id="materialInsightCard" class="insight-card hidden full">
+                <div class="insight-header">
+                    <div class="insight-title">
+                        <i class="fa-solid fa-microchip"></i>
+                        <span>Clinical Supply Insight</span>
+                    </div>
+                    <div class="insight-badge" id="stockStatusBadge">Checking Stock...</div>
+                </div>
+                <div class="insight-content">
+                    <div id="predictionList" class="prediction-list"></div>
+                </div>
+            </div>
+
+            <div class="full form-buttons" style="margin-top: 20px;">
+                <button type="submit" class="btn-primary">Create Appointment</button>
+                <button type="button" class="btn-outline" onclick="closeAppointmentModal()">Cancel</button>
+            </div>
+        </form>
+    </div>
+</div>
 
 <!-- ADD PATIENT POPUP -->
 <div id="addPatientModal" class="modal hidden">
@@ -640,7 +793,7 @@
         </div>
         <!-- MOVE THE BUTTON HERE -->
         <button class="calendar-trigger-btn" onclick="openAdvanceCalendar()">
-            <i class="fa-solid fa-calendar-days"></i> Advance Schedule
+            <i class="fa-solid fa-calendar-days"></i> Schedule
         </button>
     </div>
 
@@ -726,21 +879,28 @@
 
 <!-- REPORTS -->
 <section id="page-reports" class="admin-page">
-    <div class="page-actions">
+    <div class="page-actions" style="flex-wrap: wrap; gap: 15px;">
         <div>
-            <p>Clinic performance and management summary.</p>
+            <p>Generate and print specific clinic reports.</p>
         </div>
-        <div class="form-buttons">
-            <button class="btn-outline" onclick="printReport('summary')">
-                <i class="fa-solid fa-print"></i> Print Summary
-            </button>
-            <button class="btn-outline" onclick="printReport('patients')">
-                <i class="fa-solid fa-file-export"></i> Export Patient List
+        
+        <div style="display: flex; gap: 10px; align-items: center;">
+            <label style="margin:0; font-size: 0.85rem; color: var(--muted);">Category:</label>
+            <select id="reportFilter" onchange="renderReports()" style="width: 200px; padding: 8px;">
+                <option value="all">Recent Activity (All)</option>
+                <option value="male">Male Patients List</option>
+                <option value="female">Female Patients List</option>
+                <option value="completed">Completed Appointments</option>
+                <option value="noshow">No-Show Records</option>
+                <option value="walkin">Walk-In Records</option>
+            </select>
+
+            <button class="btn-primary" onclick="printFilteredReport()" style="padding: 10px 20px;">
+                <i class="fa-solid fa-print"></i> Print Selected Report
             </button>
         </div>
     </div>
 
-    <!-- Overview Stats -->
     <div class="report-grid">
         <div class="report-card primary-border">
             <i class="fa-solid fa-users"></i>
@@ -764,31 +924,18 @@
         </div>
     </div>
 
-    <!-- Detailed Analytics Table -->
     <div class="content-card">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-            <h2 style="margin:0;">Recent Activity Log</h2>
-            <button class="action-btn primary" onclick="printReport('activity')">Print Log</button>
-        </div>
+        <h2 id="reportTableTitle" style="margin-bottom: 15px;">Recent Activity Log</h2>
         <div class="table-wrap">
             <table>
-                <thead>
-                    <tr>
-                        <th>Date</th>
-                        <th>Type</th>
-                        <th>Patient</th>
-                        <th>Service</th>
-                        <th>Status</th>
-                    </tr>
+                <thead id="reportTableHeader">
                 </thead>
                 <tbody id="reportActivityTable">
-                    <!-- Dynamic Rows -->
                 </tbody>
             </table>
         </div>
     </div>
 </section>
-
 <!-- WALK-IN MODAL -->
 <div id="walkinModal" class="modal hidden">
     <div class="modal-card">
