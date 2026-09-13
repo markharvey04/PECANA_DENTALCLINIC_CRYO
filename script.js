@@ -57,6 +57,19 @@ const STORAGE={
                 .filter(n=>!isNaN(n));
             return prefix+String(Math.max(0,...nums)+1).padStart(3,"0");
         };
+        window.addEventListener('storage', (e) => {
+        if (!e.key) return;
+        const watchedKeys = Object.values(STORAGE);
+        if (!watchedKeys.includes(e.key)) return;
+
+        patients = load(STORAGE.patients, patients);
+        appointments = load(STORAGE.appointments, appointments);
+        appointmentQueue = load(STORAGE.appointmentQueue, appointmentQueue);
+        walkins = load(STORAGE.walkins, walkins);
+        inventory = load(STORAGE.inventory, inventory);
+
+        renderAll();
+    });
 
     /* ================= DATA ================= */
 
@@ -93,19 +106,49 @@ const STORAGE={
 
     let walkins=load(STORAGE.walkins,[]);
 
-    let inventory=load(STORAGE.inventory,[
+let inventory=load(STORAGE.inventory,[
+    {id:"I001",name:"Composite Resin",stock:12,minimum:5,leadTime:5},
+    {id:"I002",name:"Dental Floss",stock:10,minimum:5,leadTime:3},
+    {id:"I003",name:"Bonding Agent",stock:8,minimum:5,leadTime:5},
+    {id:"I004",name:"Suture Material",stock:15,minimum:5,leadTime:4},
+    {id:"I005",name:"Orthodontic Brackets",stock:20,minimum:8,leadTime:7},
+    {id:"I006",name:"Archwire",stock:10,minimum:4,leadTime:7},
+    {id:"I007",name:"Elastic Ligatures",stock:50,minimum:20,leadTime:5}
+]);
+
+/* ================= INVENTORY SELF-HEAL (adds missing materials, e.g. Braces items,
+   to clinics that already have older saved inventory data in localStorage,
+   WITHOUT touching or resetting any stock numbers already saved) ================= */
+(function ensureInventoryHasAllMaterials(){
+    const requiredMaterials=[
         {id:"I001",name:"Composite Resin",stock:12,minimum:5,leadTime:5},
         {id:"I002",name:"Dental Floss",stock:10,minimum:5,leadTime:3},
         {id:"I003",name:"Bonding Agent",stock:8,minimum:5,leadTime:5},
-        {id:"I004",name:"Suture Material",stock:15,minimum:5,leadTime:4}
-    ]);
+        {id:"I004",name:"Suture Material",stock:15,minimum:5,leadTime:4},
+        {id:"I005",name:"Orthodontic Brackets",stock:20,minimum:8,leadTime:7},
+        {id:"I006",name:"Archwire",stock:10,minimum:4,leadTime:7},
+        {id:"I007",name:"Elastic Ligatures",stock:50,minimum:20,leadTime:5}
+    ];
+    const existingIds=new Set(inventory.map(i=>i.id));
+    const existingNames=new Set(inventory.map(i=>i.name));
+    let changed=false;
+    requiredMaterials.forEach(item=>{
+        if(!existingIds.has(item.id) && !existingNames.has(item.name)){
+            inventory.push({...item});
+            changed=true;
+        }
+    });
+    if(changed) save(STORAGE.inventory, inventory);
+})();
+
         /* ================= INVENTORY BOM & DEDUCTION ================= */
 
         const BOM = {
             "Dental Check-up": { "Dental Floss": 1 },
             "Dental Cleaning": { "Dental Floss": 2 },
             "Tooth Restoration": { "Composite Resin": 1, "Bonding Agent": 1 },
-            "Tooth Extraction": { "Suture Material": 2 }
+            "Tooth Extraction": { "Suture Material": 2 },
+            "Braces": { "Orthodontic Brackets": 20, "Archwire": 2, "Elastic Ligatures": 20 }
         };
 
         function consumeInventory(service, appointmentId = null) {
@@ -129,8 +172,8 @@ const STORAGE={
         }
 
         /* ================= PUBLIC NAVIGATION ================= */
-
-        function showPublicPage(page){
+  function showPublicPage(page){
+    console.log("showPublicPage called:", page, "| scrollY before reset:", window.scrollY);
             document.getElementById("publicApp").classList.remove("hidden");
             document.getElementById("loginPage").classList.add("hidden");
             document.getElementById("adminApp").classList.add("hidden");
@@ -138,9 +181,13 @@ const STORAGE={
             const target=document.getElementById("public-"+page);
             if(target)target.classList.add("active");
             if(page==="queue-status")renderPublicQueues();
-            updatePublicStats();
-        }
+            if(typeof updatePublicStats === "function") updatePublicStats();
 
+            // Force an instant jump to the top, bypassing any smooth-scroll behavior
+            window.scrollTo({ top: 0, left: 0, behavior: "instant" });
+            document.documentElement.scrollTop = 0;
+            document.body.scrollTop = 0;
+        }
         function showPublicSite(){
             document.getElementById("publicApp").classList.remove("hidden");
             document.getElementById("loginPage").classList.add("hidden");
@@ -154,12 +201,12 @@ const STORAGE={
             document.getElementById("loginPage").classList.remove("hidden");
         }
 
-        function logout(){ showPublicSite(); }
+        function logout(){
+            sessionStorage.removeItem("pecana_admin_logged_in");
+            showPublicSite();
+        }
 
         /* ================= SELECT SERVICE -> BOOK APPOINTMENT ================= */
-        // Wires up the "Book This Service" buttons on the public Services page.
-        // It jumps to the Appointment page and pre-fills the service dropdown,
-        // then focuses the Full Name field so the patient can continue right away.
         function selectService(serviceName){
             showPublicPage("appointment");
             const select = document.getElementById("bookingService");
@@ -171,20 +218,21 @@ const STORAGE={
     /* ================= LOGIN ================= */
 
     document.getElementById("loginForm").addEventListener("submit", e => {
-        e.preventDefault();
-        const user = document.getElementById("loginUsername").value.trim();
-        const pass = document.getElementById("loginPassword").value.trim();
-        
-        // Check credentials
-        if ((user === "admin" && pass === "admin123") || (user === "administrator" && pass === "admin123")) {
-            document.getElementById("loginPage").classList.add("hidden");
-            document.getElementById("publicApp").classList.add("hidden");
-            document.getElementById("adminApp").classList.remove("hidden");
-            openAdminPage("dashboard"); // This opens the admin area
-        } else {
-            alert("Invalid login.");
-        }
-    });
+    e.preventDefault();
+    const user = document.getElementById("loginUsername").value.trim();
+    const pass = document.getElementById("loginPassword").value.trim();
+    
+    // Check credentials
+    if ((user === "admin" && pass === "admin123") || (user === "administrator" && pass === "admin123")) {
+        sessionStorage.setItem("pecana_admin_logged_in", "true");
+        document.getElementById("loginPage").classList.add("hidden");
+        document.getElementById("publicApp").classList.add("hidden");
+        document.getElementById("adminApp").classList.remove("hidden");
+        openAdminPage("dashboard"); // This opens the admin area
+    } else {
+        alert("Invalid login.");
+    }
+});
         /* ================= ADMIN NAVIGATION ================= */
 
         const pageNames={
@@ -229,12 +277,6 @@ const STORAGE={
             const card = document.getElementById("materialInsightCard");
             if(card) card.classList.add("hidden");
             temporaryMaterialAdjustments = {};
-        }
-
-        // ADD THIS BLOCK HERE:
-        // This triggers the popup automatically when clicking "Appointment Management"
-        if (page === 'appointments') {
-            openAppointmentModal();
         }
 
         const calBtn = document.getElementById('advanceScheduleBtn');
@@ -386,7 +428,7 @@ const STORAGE={
         // 4. IMPORTANT: Re-run the render function to update the "x1" to "x2" etc.
         renderWalkinAdjustmentList();
     }
-    //<---FIXED ADMIN APPOINTMENT SUBMIT --->
+//<---FIXED ADMIN APPOINTMENT SUBMIT --->
 const adminForm = document.getElementById("adminAppointmentForm");
 if (adminForm) {
     adminForm.addEventListener("submit", function(e) {
@@ -427,6 +469,56 @@ if (adminForm) {
     });
 }
 
+/* ================= EDIT APPOINTMENT (DATE/TIME) ================= */
+
+function openEditAppointmentModal(id) {
+    const a = appointments.find(x => x.id === id);
+    if (!a) return;
+    document.getElementById("editAppointmentId").value = a.id;
+    document.getElementById("editAppointmentPatientName").value = a.patientName;
+    document.getElementById("editAppointmentDate").value = a.date;
+    document.getElementById("editAppointmentDate").min = new Date().toISOString().split('T')[0];
+    document.getElementById("editAppointmentTime").value = a.time;
+    document.getElementById("editAppointmentModal").classList.remove("hidden");
+}
+function closeEditAppointmentModal() {
+    document.getElementById("editAppointmentModal").classList.add("hidden");
+    document.getElementById("editAppointmentForm").reset();
+}
+
+const editAppointmentForm = document.getElementById("editAppointmentForm");
+if (editAppointmentForm) {
+    editAppointmentForm.addEventListener("submit", function (e) {
+        e.preventDefault();
+        const id = document.getElementById("editAppointmentId").value;
+        const newDate = document.getElementById("editAppointmentDate").value;
+        const newTime = document.getElementById("editAppointmentTime").value;
+
+        if (!validateClinicSchedule(newDate, newTime)) return;
+
+        const a = appointments.find(x => x.id === id);
+        if (!a) return;
+
+        // Flag the appointment as rescheduled if the date or time actually changed,
+        // so the patient sees a notice next time they check their status.
+        if (a.date !== newDate || a.time !== newTime) {
+            a.rescheduled = true;
+        }
+
+        a.date = newDate;
+        a.time = newTime;
+
+        const q = appointmentQueue.find(x => x.appointmentId === id);
+        if (q) { q.date = newDate; q.time = newTime; }
+
+        save(STORAGE.appointments, appointments);
+        save(STORAGE.appointmentQueue, appointmentQueue);
+
+        closeEditAppointmentModal();
+        alert("Appointment updated successfully.");
+        renderAll();
+    });
+}
     /* ================= PATIENTS ================= */
 document.getElementById("patientForm").addEventListener("submit", e => {
     e.preventDefault();
@@ -570,45 +662,59 @@ document.getElementById("patientForm").addEventListener("submit", e => {
         temporaryMaterialAdjustments = {};
     }
 
-    // --- SAFE RENDER FOR APPOINTMENTS (WITH SEARCH) ---
-    function renderAppointments() {
-        const table = document.getElementById("appointmentTable");
-        if (!table) return; // Safety check: Prevents breaking other modules
+// --- SAFE RENDER FOR APPOINTMENTS (WITH SEARCH) ---
+function renderAppointments() {
+    const table = document.getElementById("appointmentTable");
+    if (!table) return;
 
-        const searchInput = document.getElementById("appointmentSearch");
-        const filter = searchInput ? searchInput.value.toLowerCase() : "";
+    const searchInput = document.getElementById("appointmentSearch");
+    const filter = searchInput ? searchInput.value.toLowerCase() : "";
 
-        if (!appointments.length) { 
-            table.innerHTML = `<tr><td colspan="7">No appointments found.</td></tr>`; 
-            return; 
+    if (!appointments.length) { 
+        table.innerHTML = `<tr><td colspan="7">No appointments found.</td></tr>`; 
+        return; 
+    }
+
+    const filtered = appointments.filter(a => {
+        const matchesSearch = a.patientName.toLowerCase().includes(filter) || 
+                               a.id.toLowerCase().includes(filter);
+        if (!matchesSearch) return false;
+
+        if (a.status === "Completed" || a.status === "No-show") {
+            return a.date === today();
         }
 
-        const filtered = appointments.filter(a => 
-            a.patientName.toLowerCase().includes(filter) || 
-            a.id.toLowerCase().includes(filter)
-        );
+        return true;
+    });
 
-    const sorted = [...filtered].sort((a, b) => {
-    const numA = parseInt(String(a.id).replace(/\D/g, "")) || 0;
-    const numB = parseInt(String(b.id).replace(/\D/g, "")) || 0;
-    return numB - numA;
-});
-        
-        table.innerHTML = sorted.map(a => `
-            <tr>
-                <td>${a.id}</td>
-                <td><strong>${esc(a.patientName)}</strong></td>
-                <td>${formatDate(a.date)}</td>
-                <td>${formatTime(a.time)}</td>
-                <td>${esc(a.service)}</td>
-                <td><span class="badge ${statusClass(a.status)}">${a.status}</span></td>
-                <td>
-                    ${a.status === "Pending" ? `<button class="action-btn success" onclick="approveAppointment('${a.id}')">Approve</button>` : ""}
-                    ${a.status === "Approved" ? `<button class="action-btn primary" onclick="openAdminPage('appointmentQueue')">Queue</button>` : ""}
-                </td>
-            </tr>
-        `).join("");
-    }
+
+        const statusPriority = { "Pending": 0, "Approved": 1, "Completed": 2, "No-show": 2 };
+
+        const sorted = [...filtered].sort((a, b) => {
+            const rankA = statusPriority[a.status] ?? 3;
+            const rankB = statusPriority[b.status] ?? 3;
+            if (rankA !== rankB) return rankA - rankB;
+
+            const keyA = `${a.date} ${a.time || "00:00"}`;
+            const keyB = `${b.date} ${b.time || "00:00"}`;
+            return keyA.localeCompare(keyB);
+        });
+
+    table.innerHTML = sorted.map(a => `
+        <tr>
+            <td>${a.id}</td>
+            <td><strong>${esc(a.patientName)}</strong></td>
+            <td>${formatDate(a.date)}</td>
+            <td>${formatTime(a.time)}</td>
+            <td>${esc(a.service)}</td>
+            <td><span class="badge ${statusClass(a.status)}">${a.status}</span></td>
+            <td>
+                ${a.status === "Pending" ? `<button class="action-btn success" onclick="approveAppointment('${a.id}')">Approve</button><button class="action-btn warning" onclick="openEditAppointmentModal('${a.id}')">Edit</button>` : ""}
+                ${a.status === "Approved" ? `<button class="action-btn primary" onclick="openAdminPage('appointmentQueue')">Queue</button>` : ""}
+            </td>
+        </tr>
+    `).join("");
+}
 
 // --- FIXED PUBLIC BOOKING LISTENER ---
 const publicForm = document.getElementById("appointmentForm");
@@ -1071,40 +1177,6 @@ const validateClinicSchedule = (dateStr, timeStr) => {
 
     return true; // Passed! No error message sent for Tomorrow/Future dates.
 };
-
- // THE PATIENT BOOKING LISTENER
-document.getElementById("appointmentForm").addEventListener("submit", e => {
-    e.preventDefault();
-
-    const date = document.getElementById("bookingDate").value;
-    const time = document.getElementById("bookingTime").value;
-    const name = document.getElementById("bookingName").value.trim();
-    const contact = document.getElementById("bookingContact").value.trim();
-    const service = document.getElementById("bookingService").value;
-    const concern = document.getElementById("bookingConcern").value.trim();
-
-    // Use the unified function
-    if (!validateClinicBooking(date, time)) {
-        return; 
-    }
-
-    // Rest of your booking logic...
-    let patient = patients.find(p => p.name.toLowerCase() === name.toLowerCase());
-    if (!patient) {
-        patient = { id: nextId("P", patients), name, contact, dob: "", address: "", gender: "", emergency: "", concern, status: "Active" };
-        patients.push(patient);
-        save(STORAGE.patients, patients);
-    }
-
-    const appointment = { id: nextId("APT", appointments), patientId: patient.id, patientName: patient.name, date, time, service, status: "Pending", queueStatus: null };
-    appointments.push(appointment);
-    save(STORAGE.appointments, appointments);
-    
-    e.target.reset();
-    alert("Appointment submitted successfully.");
-    showPublicPage("home");
-});
-
         /* ================= DASHBOARD ================= */
 
         function renderDashboardCharts() {
@@ -1206,7 +1278,26 @@ document.getElementById("appointmentForm").addEventListener("submit", e => {
             }
         }
 
-   /* ================= UPDATED REPORTS RENDER ================= */
+/* ================= UPDATED REPORTS RENDER ================= */
+    function inReportDateRange(dateStr) {
+        const startEl = document.getElementById("reportStartDate");
+        const endEl = document.getElementById("reportEndDate");
+        const startVal = startEl ? startEl.value : "";
+        const endVal = endEl ? endEl.value : "";
+        if (!startVal && !endVal) return true;
+
+        const d = new Date(dateStr + "T00:00:00");
+        if (startVal && d < new Date(startVal + "T00:00:00")) return false;
+        if (endVal && d > new Date(endVal + "T23:59:59")) return false;
+        return true;
+    }
+
+    function clearReportDateFilter() {
+        document.getElementById("reportStartDate").value = "";
+        document.getElementById("reportEndDate").value = "";
+        renderReports();
+    }
+
     function renderReports() {
         // 1. Update Stat Cards
         const totalCompleted = appointmentQueue.filter(q => q.status === "Completed").length + walkins.filter(q => q.status === "Completed").length;
@@ -1223,20 +1314,28 @@ document.getElementById("appointmentForm").addEventListener("submit", e => {
         const tableHeader = document.getElementById("reportTableHeader");
         const tableBody = document.getElementById("reportActivityTable");
 
-        if (filter === "male" || filter === "female") {
+        if (filter === "male" || filter === "female" || filter === "other") {
             // --- PATIENT GENDER FILTER ---
-            const gender = filter === "male" ? "Male" : "Female";
+            const genderMap = { male: "Male", female: "Female", other: "Other" };
+            const gender = genderMap[filter];
             tableTitle.textContent = `${gender} Patient Directory`;
             tableHeader.innerHTML = `<tr><th>ID</th><th>Patient Name</th><th>Contact</th><th>DOB</th><th>Gender</th></tr>`;
-            
-            const list = patients.filter(p => p.gender === gender);
+
+            // Sorted by Patient ID, lowest to highest, so the directory reads in a
+            // predictable order regardless of the order patients were registered in.
+            // "Other" also captures blank/unspecified gender values so no patient is left out.
+            const list = patients.filter(p => {
+                if (gender === "Other") return p.gender === "Other" || !p.gender;
+                return p.gender === gender;
+            }).sort((a, b) => a.id.localeCompare(b.id, undefined, { numeric: true }));
+
             tableBody.innerHTML = list.length ? list.map(p => `
                 <tr>
                     <td>${p.id}</td>
                     <td><strong>${esc(p.name)}</strong></td>
                     <td>${esc(p.contact)}</td>
                     <td>${formatDate(p.dob)}</td>
-                    <td>${p.gender}</td>
+                    <td>${esc(p.gender || "Other")}</td>
                 </tr>
             `).join("") : `<tr><td colspan="5">No ${gender} patients found.</td></tr>`;
 
@@ -1249,7 +1348,7 @@ document.getElementById("appointmentForm").addEventListener("submit", e => {
             const allHistory = [
                 ...appointments.map(a => ({ date: a.date, time: a.time || "00:00", type: 'Appt', name: a.patientName, svc: a.service, stat: a.status })),
                 ...walkins.map(w => ({ date: w.date, time: w.time || "00:00", type: 'Walkin', name: w.patientName, svc: w.service, stat: w.status }))
-            ].filter(item => item.stat === status).sort((a,b) => new Date(`${b.date}T${b.time}`) - new Date(`${a.date}T${a.time}`));
+                ].filter(item => item.stat === status && inReportDateRange(item.date)).sort((a,b) => new Date(`${a.date}T${a.time}`) - new Date(`${b.date}T${b.time}`));
 
             tableBody.innerHTML = allHistory.length ? allHistory.map(r => `
                 <tr>
@@ -1266,7 +1365,7 @@ document.getElementById("appointmentForm").addEventListener("submit", e => {
             tableTitle.textContent = "Walk-In Patient Records";
             tableHeader.innerHTML = `<tr><th>Queue #</th><th>Date</th><th>Time</th><th>Patient</th><th>Service</th><th>Status</th></tr>`;
 
-            const sortedWalkins = [...walkins].sort((a,b) => new Date(`${b.date}T${b.time||"00:00"}`) - new Date(`${a.date}T${a.time||"00:00"}`));
+            const sortedWalkins = [...walkins].filter(w => inReportDateRange(w.date)).sort((a,b) => new Date(`${a.date}T${a.time||"00:00"}`) - new Date(`${b.date}T${b.time||"00:00"}`));
 
             tableBody.innerHTML = sortedWalkins.length ? sortedWalkins.map(w => `
                 <tr>
@@ -1279,6 +1378,23 @@ document.getElementById("appointmentForm").addEventListener("submit", e => {
                 </tr>
             `).join("") : `<tr><td colspan="6">No walk-in records found.</td></tr>`;
 
+        } else if (filter === "inventory") {
+            // --- INVENTORY REPORT ---
+            tableTitle.textContent = "Inventory Stock Report";
+            tableHeader.innerHTML = `<tr><th>Material</th><th>Current Stock</th><th>Minimum Required</th><th>Supplier Lead Time</th><th>Status</th></tr>`;
+
+            const sortedInventory = [...inventory].sort((a, b) => a.name.localeCompare(b.name));
+
+            tableBody.innerHTML = sortedInventory.length ? sortedInventory.map(i => `
+                <tr>
+                    <td><strong>${esc(i.name)}</strong></td>
+                    <td>${i.stock}</td>
+                    <td>${i.minimum}</td>
+                    <td>${i.leadTime} days</td>
+                    <td><span class="badge ${i.stock <= i.minimum ? "no-show" : "approved"}">${i.stock <= i.minimum ? "Restock" : "OK"}</span></td>
+                </tr>
+            `).join("") : `<tr><td colspan="5">No inventory records found.</td></tr>`;
+
         } else {
             // --- DEFAULT: RECENT ACTIVITY ---
             tableTitle.textContent = "Recent Activity Log";
@@ -1287,7 +1403,7 @@ document.getElementById("appointmentForm").addEventListener("submit", e => {
             const allHistory = [
                 ...appointments.map(a => ({ date: a.date, time: a.time || "00:00", type: 'Appt', name: a.patientName, svc: a.service, stat: a.status })),
                 ...walkins.map(w => ({ date: w.date, time: w.time || "00:00", type: 'Walkin', name: w.patientName, svc: w.service, stat: w.status }))
-            ].sort((a,b) => new Date(`${b.date}T${b.time}`) - new Date(`${a.date}T${a.time}`)).slice(0, 30);
+            ].filter(item => inReportDateRange(item.date)).sort((a,b) => new Date(`${a.date}T${a.time}`) - new Date(`${b.date}T${b.time}`)).slice(-30);
 
             tableBody.innerHTML = allHistory.map(r => `
                 <tr>
@@ -1457,15 +1573,26 @@ function renderAll(){
 }
         /* ================= START ================= */
 
-    document.addEventListener("DOMContentLoaded", () => {
-        syncAppointmentQueue();
-        renderAll();
-        
-        // This physically prevents picking past dates in the browser's date picker
-        const todayISO = new Date().toISOString().split('T')[0];
-        if (document.getElementById("bookingDate")) document.getElementById("bookingDate").min = todayISO;
-        if (document.getElementById("adminAppointmentDate")) document.getElementById("adminAppointmentDate").min = todayISO;
-    });
+document.addEventListener("DOMContentLoaded", () => {
+    syncAppointmentQueue();
+    renderAll();
+    
+    // This physically prevents picking past dates in the browser's date picker
+    const todayISO = new Date().toISOString().split('T')[0];
+    if (document.getElementById("bookingDate")) document.getElementById("bookingDate").min = todayISO;
+    if (document.getElementById("adminAppointmentDate")) document.getElementById("adminAppointmentDate").min = todayISO;
+
+    // Restore admin view on refresh if still logged in
+    // (Splash-screen visuals are handled exclusively by handleInitialSplashState()
+    // further below — this used to also toggle the splash here, which raced against
+    // that handler's own timers and caused glitches when reloading the admin panel.)
+    if(sessionStorage.getItem("pecana_admin_logged_in") === "true"){
+        document.getElementById("loginPage").classList.add("hidden");
+        document.getElementById("publicApp").classList.add("hidden");
+        document.getElementById("adminApp").classList.remove("hidden");
+        openAdminPage("dashboard");
+    }
+});
     /* ================= ADVANCE CALENDAR LOGIC ================= */
 
     let advanceCalendar;
@@ -1547,7 +1674,6 @@ function renderAll(){
         inventory.forEach(item => {
             if (item.stock <= item.minimum) {
                 notifyCount++;
-                // ADDED onclick="openAdminPage('inventory'); toggleNotifications('adminNotify')"
                 html += `
                     <div class="notify-item low-stock" onclick="openAdminPage('inventory'); toggleNotifications('adminNotify')">
                         <i class="fa-solid fa-triangle-exclamation"></i>
@@ -1563,7 +1689,6 @@ function renderAll(){
         const pending = appointments.filter(a => a.status === "Pending");
         pending.forEach(a => {
             notifyCount++;
-            // ADDED onclick="openAdminPage('appointments'); toggleNotifications('adminNotify')"
             html += `
                 <div class="notify-item new-appt" onclick="openAdminPage('appointments'); toggleNotifications('adminNotify')">
                     <i class="fa-solid fa-calendar-plus"></i>
@@ -1585,38 +1710,69 @@ function renderAll(){
         list.innerHTML = html;
     }
 
+    // --- PATIENT-FACING: "Check Status" bell on the public site ---
     function checkPatientNotifications() {
         const searchVal = document.getElementById('patientNotifySearch').value.trim();
         const list = document.getElementById('patientNotifyList');
         
         if (!searchVal) {
-            alert("Please enter your contact number.");
+            alert("Please enter your contact number or name.");
             return;
         }
 
-        // --- MAGIC LINE: Make the result card visible now ---
         list.style.display = 'block';
 
-        const patientMatches = patients.filter(p => p.contact === searchVal);
+        const searchLower = searchVal.toLowerCase();
+        const patientMatches = patients.filter(p => 
+            p.contact === searchVal || 
+            p.name.toLowerCase().includes(searchLower)
+        );
         const patientIds = patientMatches.map(p => p.id);
         const myAppts = appointments.filter(a => patientIds.includes(a.patientId));
 
         if (myAppts.length === 0) {
-            list.innerHTML = '<p style="padding:20px; text-align:center; font-size:12px; color:#999;">No records found for this number.</p>';
+            list.innerHTML = '<p style="padding:20px; text-align:center; font-size:12px; color:#999;">No records found for this number or name.</p>';
             return;
         }
 
+        // Active appointments (Pending/Approved) matter most — show those first,
+        // soonest upcoming date at the very top. Completed/No-show history goes
+        // below that, most recent first.
+        const activeStatuses = ["Pending", "Approved"];
+
+        const sortedAppts = [...myAppts].sort((a, b) => {
+            const aActive = activeStatuses.includes(a.status);
+            const bActive = activeStatuses.includes(b.status);
+
+            if (aActive !== bActive) return aActive ? -1 : 1;
+
+            const keyA = `${a.date} ${a.time || "00:00"}`;
+            const keyB = `${b.date} ${b.time || "00:00"}`;
+
+            return aActive
+                ? keyA.localeCompare(keyB)   // active: soonest first
+                : keyB.localeCompare(keyA);  // history: most recent first
+        });
+
         let html = '';
-        myAppts.forEach(a => {
+        sortedAppts.forEach(a => {
             let statusIcon = a.status === "Approved" ? "fa-circle-check" : "fa-clock";
             let statusClass = a.status === "Approved" ? "approved" : "";
             
             html += `
-                <div class="notify-item ${statusClass}" onclick="showPublicPage('queue-status'); toggleNotifications('patientNotify')">
+                <div class="notify-item ${statusClass} ${a.rescheduled ? 'rescheduled' : ''}" onclick="showPublicPage('queue-status'); toggleNotifications('patientNotify')">
                     <i class="fa-solid ${statusIcon}"></i>
                     <div class="notify-content">
                         <b>Appointment Status: ${a.status}</b>
-                        <p>Service: ${a.service}<br>Schedule: ${formatDate(a.date)} at ${formatTime(a.time)}</p>
+                        <p>Service: ${a.service}</p>
+                        <p>Schedule: ${formatDate(a.date)}</p>
+                        <p>Time: ${formatTime(a.time)}</p>
+                        ${a.rescheduled ? `
+                            <div class="reschedule-alert">
+                                <i class="fa-solid fa-clock-rotate-left"></i>
+                                <span>The clinic updated this appointment's schedule. Please note the new date and time above.</span>
+                            </div>
+                        ` : ''}
                         <small style="color:var(--purple2);">Click to view Queue Status →</small>
                     </div>
                 </div>`;
@@ -1625,9 +1781,65 @@ function renderAll(){
         list.innerHTML = html;
     }
 
-    // Update the admin badge every time the app renders
     const originalRenderAll = renderAll;
     renderAll = function() {
         originalRenderAll();
         updateAdminNotifications();
     };
+/* ================= WELCOME & RELOAD SPLASH SCREEN ================= */
+
+// Public manual close function
+window.closeWelcomeSplash = function () {
+    sessionStorage.setItem("pecana_entered", "true");
+    const welcomeSplash = document.getElementById("welcomeSplash");
+    if (welcomeSplash) {
+        welcomeSplash.classList.add("hidden");
+        setTimeout(() => {
+            welcomeSplash.style.display = "none";
+        }, 300);
+    }
+};
+
+// Immediate check on load to prevent UI flash
+(function handleInitialSplashState() {
+    const isAdminLoggedIn = sessionStorage.getItem("pecana_admin_logged_in") === "true" || window.location.pathname.includes("admin");
+    const alreadyEntered = sessionStorage.getItem("pecana_entered") === "true";
+
+    document.addEventListener("DOMContentLoaded", () => {
+        const welcomeSplash = document.getElementById("welcomeSplash");
+        const logoOnlySplash = document.getElementById("logoOnlySplash");
+
+        if (isAdminLoggedIn || alreadyEntered) {
+            // Hide public full welcome screen completely
+            if (welcomeSplash) {
+                welcomeSplash.style.display = "none";
+                welcomeSplash.classList.add("hidden");
+            }
+
+            // Show brief logo-only loader on reload/navigation
+            if (logoOnlySplash) {
+                logoOnlySplash.style.display = "flex";
+                logoOnlySplash.classList.remove("hidden");
+
+                // Seamlessly fade out logo splash after page settles
+                setTimeout(() => {
+                    logoOnlySplash.classList.add("fade-out");
+                    setTimeout(() => {
+                        logoOnlySplash.style.display = "none";
+                        logoOnlySplash.classList.add("hidden");
+                    }, 300);
+                }, 600);
+            }
+        } else {
+            // First time entry for public visitors
+            if (logoOnlySplash) {
+                logoOnlySplash.style.display = "none";
+                logoOnlySplash.classList.add("hidden");
+            }
+            if (welcomeSplash) {
+                welcomeSplash.style.display = "flex";
+                welcomeSplash.classList.remove("hidden");
+            }
+        }
+    });
+})();
