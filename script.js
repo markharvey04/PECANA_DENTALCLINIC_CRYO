@@ -12,6 +12,8 @@ const STORAGE={
         let inventoryChartInstance = null;
         let temporaryMaterialAdjustments = {}; // Holds +/- changes before saving
         let temporaryWalkinAdjustments = {}; // Tracking +/- for current walk-in modal
+        let pendingApprovalId = null;
+        let temporaryApprovalAdjustments = {};
 
         const load=(key,fallback=[])=>{
             try{
@@ -22,7 +24,13 @@ const STORAGE={
 
         const save=(key,data)=>localStorage.setItem(key,JSON.stringify(data));
 
-        const today=()=>new Date().toISOString().slice(0,10);
+        const today=()=>{
+        const d = new Date();
+        const y = d.getFullYear();
+        const m = String(d.getMonth()+1).padStart(2,"0");
+        const day = String(d.getDate()).padStart(2,"0");
+        return `${y}-${m}-${day}`;
+        };
 
         const formatDate=d=>d?new Date(d+"T00:00:00").toLocaleDateString("en-US",
             {month:"short",day:"numeric",year:"numeric"}):"-";
@@ -70,30 +78,31 @@ const STORAGE={
 
         renderAll();
     });
+    
 
     /* ================= DATA ================= */
 
     let patients = load(STORAGE.patients, [
-        { id: "P001", name: "Juan Dela Cruz", contact: "09171234567", dob: "1985-05-15", address: "Polangui, Albay", gender: "Male", emergency: "Maria Dela Cruz", concern: "Regular dental check-up", status: "Active" },
-        { id: "P002", name: "Maria Santos", contact: "09181234567", dob: "1992-08-22", address: "Oas, Albay", gender: "Female", emergency: "Pedro Santos", concern: "Tooth cleaning", status: "Active" },
-        { id: "P003", name: "Carlos Reyes", contact: "09191234567", dob: "1980-02-10", address: "Ligao City, Albay", gender: "Male", emergency: "Ana Reyes", concern: "Tooth pain", status: "Active" },
-        { id: "P004", name: "Antonio Rivera", contact: "09201112233", dob: "1995-04-12", address: "Guinobatan, Albay", gender: "Male", emergency: "Liza Rivera", concern: "Braces adjustment", status: "Active" },
-        { id: "P005", name: "Elena Garcia", contact: "09212223344", dob: "1988-11-30", address: "Polangui, Albay", gender: "Female", emergency: "Jose Garcia", concern: "Wisdom tooth consultation", status: "Active" },
-        { id: "P006", name: "Ricardo Ramos", contact: "09223334455", dob: "1975-07-08", address: "Camalig, Albay", gender: "Male", emergency: "Celia Ramos", concern: "Gum bleeding", status: "Active" },
-        { id: "P007", name: "Josefina Mendoza", contact: "09234445566", dob: "1960-01-25", address: "Oas, Albay", gender: "Female", emergency: "Mario Mendoza", concern: "Dentures fitting", status: "Active" },
-        { id: "P008", name: "Manuel Castro", contact: "09245556677", dob: "1998-12-05", address: "Ligao City, Albay", gender: "Male", emergency: "Sara Castro", concern: "Teeth whitening", status: "Active" },
-        { id: "P009", name: "Remedios Lopez", contact: "09256667788", dob: "1972-03-18", address: "Polangui, Albay", gender: "Female", emergency: "Danilo Lopez", concern: "Root canal therapy", status: "Active" },
-        { id: "P010", name: "Francisco Tan", contact: "09267778899", dob: "1983-06-21", address: "Guinobatan, Albay", gender: "Male", emergency: "Aimee Tan", concern: "Dental implants", status: "Active" },
-        { id: "P011", name: "Pacita Aquino", contact: "09278889900", dob: "1990-10-10", address: "Oas, Albay", gender: "Female", emergency: "Ben Aquino", concern: "Scaling and polishing", status: "Active" },
-        { id: "P012", name: "Ramon Bautista", contact: "09289990011", dob: "1965-08-05", address: "Camalig, Albay", gender: "Male", emergency: "Vilma Bautista", concern: "Crown replacement", status: "Active" },
-        { id: "P013", name: "Luzviminda Villamor", contact: "09290001122", dob: "1978-02-28", address: "Ligao City, Albay", gender: "Female", emergency: "Oscar Villamor", concern: "Bad breath consultation", status: "Active" },
-        { id: "P014", name: "Angelito Gonzales", contact: "09301112233", dob: "2000-07-22", address: "Polangui, Albay", gender: "Male", emergency: "Grace Gonzales", concern: "Mouth guard fitting", status: "Active" },
-        { id: "P015", name: "Corazon Salvador", contact: "09312223344", dob: "1996-04-09", address: "Oas, Albay", gender: "Female", emergency: "Luis Salvador", concern: "Tooth extraction", status: "Active" },
-        { id: "P016", name: "Benigno Dizon", contact: "09323334455", dob: "1982-01-01", address: "Guinobatan, Albay", gender: "Male", emergency: "Cory Dizon", concern: "Bridge adjustment", status: "Active" },
-        { id: "P017", name: "Teresita Roxas", contact: "09334445566", dob: "2005-09-14", address: "Polangui, Albay", gender: "Female", emergency: "Felipe Roxas", concern: "Cavity filling", status: "Active" },
-        { id: "P018", name: "Fidel Pineda", contact: "09345556677", dob: "1987-12-30", address: "Camalig, Albay", gender: "Male", emergency: "Eva Pineda", concern: "Sensitivity issues", status: "Active" },
-        { id: "P019", name: "Gloria de Leon", contact: "09356667788", dob: "1993-05-04", address: "Ligao City, Albay", gender: "Female", emergency: "Mar de Leon", concern: "Impacted tooth", status: "Active" },
-        { id: "P020", name: "Oscar Macapagal", contact: "09367778899", dob: "1955-11-11", address: "Oas, Albay", gender: "Male", emergency: "Nestor Macapagal", concern: "Jaw pain", status: "Active" }
+        { id: "P001", name: "Juan Dela Cruz", contact: "09171234567", email: "", dob: "1985-05-15", address: "Polangui, Albay", gender: "Male", emergency: "Maria Dela Cruz", concern: "Regular dental check-up", status: "Active" },
+        { id: "P002", name: "Maria Santos", contact: "09181234567", email: "", dob: "1992-08-22", address: "Oas, Albay", gender: "Female", emergency: "Pedro Santos", concern: "Tooth cleaning", status: "Active" },
+        { id: "P003", name: "Carlos Reyes", contact: "09191234567", email: "", dob: "1980-02-10", address: "Ligao City, Albay", gender: "Male", emergency: "Ana Reyes", concern: "Tooth pain", status: "Active" },
+        { id: "P004", name: "Antonio Rivera", contact: "09201112233", email: "", dob: "1995-04-12", address: "Guinobatan, Albay", gender: "Male", emergency: "Liza Rivera", concern: "Braces adjustment", status: "Active" },
+        { id: "P005", name: "Elena Garcia", contact: "09212223344", email: "", dob: "1988-11-30", address: "Polangui, Albay", gender: "Female", emergency: "Jose Garcia", concern: "Wisdom tooth consultation", status: "Active" },
+        { id: "P006", name: "Ricardo Ramos", contact: "09223334455", email: "", dob: "1975-07-08", address: "Camalig, Albay", gender: "Male", emergency: "Celia Ramos", concern: "Gum bleeding", status: "Active" },
+        { id: "P007", name: "Josefina Mendoza", contact: "09234445566", email: "", dob: "1960-01-25", address: "Oas, Albay", gender: "Female", emergency: "Mario Mendoza", concern: "Dentures fitting", status: "Active" },
+        { id: "P008", name: "Manuel Castro", contact: "09245556677", email: "", dob: "1998-12-05", address: "Ligao City, Albay", gender: "Male", emergency: "Sara Castro", concern: "Teeth whitening", status: "Active" },
+        { id: "P009", name: "Remedios Lopez", contact: "09256667788", email: "", dob: "1972-03-18", address: "Polangui, Albay", gender: "Female", emergency: "Danilo Lopez", concern: "Root canal therapy", status: "Active" },
+        { id: "P010", name: "Francisco Tan", contact: "09267778899", email: "", dob: "1983-06-21", address: "Guinobatan, Albay", gender: "Male", emergency: "Aimee Tan", concern: "Dental implants", status: "Active" },
+        { id: "P011", name: "Pacita Aquino", contact: "09278889900", email: "", dob: "1990-10-10", address: "Oas, Albay", gender: "Female", emergency: "Ben Aquino", concern: "Scaling and polishing", status: "Active" },
+        { id: "P012", name: "Ramon Bautista", contact: "09289990011", email: "", dob: "1965-08-05", address: "Camalig, Albay", gender: "Male", emergency: "Vilma Bautista", concern: "Crown replacement", status: "Active" },
+        { id: "P013", name: "Luzviminda Villamor", contact: "09290001122", email: "", dob: "1978-02-28", address: "Ligao City, Albay", gender: "Female", emergency: "Oscar Villamor", concern: "Bad breath consultation", status: "Active" },
+        { id: "P014", name: "Angelito Gonzales", contact: "09301112233", email: "", dob: "2000-07-22", address: "Polangui, Albay", gender: "Male", emergency: "Grace Gonzales", concern: "Mouth guard fitting", status: "Active" },
+        { id: "P015", name: "Corazon Salvador", contact: "09312223344", email: "", dob: "1996-04-09", address: "Oas, Albay", gender: "Female", emergency: "Luis Salvador", concern: "Tooth extraction", status: "Active" },
+        { id: "P016", name: "Benigno Dizon", contact: "09323334455", email: "", dob: "1982-01-01", address: "Guinobatan, Albay", gender: "Male", emergency: "Cory Dizon", concern: "Bridge adjustment", status: "Active" },
+        { id: "P017", name: "Teresita Roxas", contact: "09334445566", email: "", dob: "2005-09-14", address: "Polangui, Albay", gender: "Female", emergency: "Felipe Roxas", concern: "Cavity filling", status: "Active" },
+        { id: "P018", name: "Fidel Pineda", contact: "09345556677", email: "", dob: "1987-12-30", address: "Camalig, Albay", gender: "Male", emergency: "Eva Pineda", concern: "Sensitivity issues", status: "Active" },
+        { id: "P019", name: "Gloria de Leon", contact: "09356667788", email: "", dob: "1993-05-04", address: "Ligao City, Albay", gender: "Female", emergency: "Mar de Leon", concern: "Impacted tooth", status: "Active" },
+        { id: "P020", name: "Oscar Macapagal", contact: "09367778899", email: "", dob: "1955-11-11", address: "Oas, Albay", gender: "Male", emergency: "Nestor Macapagal", concern: "Jaw pain", status: "Active" }
     ]);
 
     let appointments = load(STORAGE.appointments, [
@@ -142,7 +151,6 @@ let inventory=load(STORAGE.inventory,[
 })();
 
         /* ================= INVENTORY BOM & DEDUCTION ================= */
-
         const BOM = {
             "Dental Check-up": { "Dental Floss": 1 },
             "Dental Cleaning": { "Dental Floss": 2 },
@@ -154,7 +162,6 @@ let inventory=load(STORAGE.inventory,[
         function consumeInventory(service, appointmentId = null) {
             let materials = BOM[service] || {};
 
-            // Use custom materials saved with the appointment if they exist
             if (appointmentId) {
                 const appt = appointments.find(a => a.id === appointmentId);
                 if (appt && appt.customMaterials) {
@@ -183,7 +190,6 @@ let inventory=load(STORAGE.inventory,[
             if(page==="queue-status")renderPublicQueues();
             if(typeof updatePublicStats === "function") updatePublicStats();
 
-            // Force an instant jump to the top, bypassing any smooth-scroll behavior
             window.scrollTo({ top: 0, left: 0, behavior: "instant" });
             document.documentElement.scrollTop = 0;
             document.body.scrollTop = 0;
@@ -206,6 +212,14 @@ let inventory=load(STORAGE.inventory,[
             showPublicSite();
         }
 
+        function logout(){
+            sessionStorage.removeItem("pecana_admin_logged_in");
+            showPublicSite();
+        }
+
+        function autoFinalizePastEntries(){
+        }
+
         /* ================= SELECT SERVICE -> BOOK APPOINTMENT ================= */
         function selectService(serviceName){
             showPublicPage("appointment");
@@ -213,6 +227,84 @@ let inventory=load(STORAGE.inventory,[
             if(select) select.value = serviceName;
             const nameField = document.getElementById("bookingName");
             if(nameField) nameField.focus();
+        }
+                /* ================= SERVICE DETAILS POPUP ================= */
+                const SERVICE_INFO = {
+            "Dental Check-up": {
+                icon: "fa-tooth",
+                desc: "A routine examination of the teeth, gums, and mouth to identify cavities, gum problems, and other oral health concerns early.",
+                duration: "20–30 minutes",
+                idealFor: "Anyone due for a routine oral health review",
+                includes: ["Visual and manual oral examination", "Gum and bite assessment", "Personalized oral hygiene advice"]
+            },
+            "Dental Cleaning": {
+                icon: "fa-wand-magic-sparkles",
+                desc: "A professional procedure that removes plaque and tartar buildup to help prevent cavities, gum disease, and bad breath.",
+                duration: "30–45 minutes",
+                idealFor: "Patients wanting to maintain healthy gums and fresh breath",
+                includes: ["Plaque and tartar removal", "Teeth polishing", "Fluoride application (if needed)"]
+            },
+            "Tooth Restoration": {
+                icon: "fa-tooth",
+                desc: "A treatment that repairs damaged or decayed teeth to restore their structure, function, and natural appearance.",
+                duration: "45–60 minutes",
+                idealFor: "Teeth affected by cavities, chips, or minor damage",
+                includes: ["Removal of decayed material", "Composite or bonding application", "Bite adjustment and polish"]
+            },
+            "Tooth Extraction": {
+                icon: "fa-teeth",
+                desc: "A procedure that removes a severely damaged, decayed, or problematic tooth to prevent further dental complications.",
+                duration: "30–60 minutes",
+                idealFor: "Severely decayed, broken, or impacted teeth",
+                includes: ["Local anesthesia", "Safe tooth removal", "Aftercare instructions"]
+            },
+            "Braces": {
+                icon: "fa-teeth-open",
+                desc: "An orthodontic treatment that gradually aligns and straightens teeth while helping improve bite and overall dental alignment.",
+                duration: "Ongoing treatment (regular adjustment visits)",
+                idealFor: "Patients with misaligned teeth or bite issues",
+                includes: ["Initial fitting and consultation", "Periodic wire/bracket adjustments", "Progress monitoring"]
+            }
+        };
+
+        let pendingServiceSelection = null;
+
+        function viewServiceDetails(serviceName){
+            const info = SERVICE_INFO[serviceName];
+            if(!info) return;
+            pendingServiceSelection = serviceName;
+            document.getElementById("serviceDetailsTitle").textContent = serviceName;
+            document.getElementById("serviceDetailsIcon").innerHTML = `<i class="fa-solid ${info.icon}"></i>`;
+            document.getElementById("serviceDetailsDesc").textContent = info.desc;
+
+            document.getElementById("serviceDetailsMeta").innerHTML = `
+                <div class="service-meta-item">
+                    <i class="fa-solid fa-clock"></i>
+                    <div><strong>Duration</strong><span>${esc(info.duration)}</span></div>
+                </div>
+                <div class="service-meta-item">
+                    <i class="fa-solid fa-user-check"></i>
+                    <div><strong>Ideal For</strong><span>${esc(info.idealFor)}</span></div>
+                </div>
+            `;
+
+            document.getElementById("serviceDetailsIncludes").innerHTML = info.includes.map(item =>
+                `<li><i class="fa-solid fa-circle-check"></i> ${esc(item)}</li>`
+            ).join("");
+
+            document.getElementById("serviceDetailsModal").classList.remove("hidden");
+        }
+
+        function closeServiceDetailsModal(){
+            document.getElementById("serviceDetailsModal").classList.add("hidden");
+            pendingServiceSelection = null;
+        }
+
+        function proceedToBookService(){
+            if(!pendingServiceSelection){ closeServiceDetailsModal(); return; }
+            const service = pendingServiceSelection;
+            closeServiceDetailsModal();
+            selectService(service);
         }
 
     /* ================= LOGIN ================= */
@@ -222,13 +314,12 @@ let inventory=load(STORAGE.inventory,[
     const user = document.getElementById("loginUsername").value.trim();
     const pass = document.getElementById("loginPassword").value.trim();
     
-    // Check credentials
     if ((user === "admin" && pass === "admin123") || (user === "administrator" && pass === "admin123")) {
         sessionStorage.setItem("pecana_admin_logged_in", "true");
         document.getElementById("loginPage").classList.add("hidden");
         document.getElementById("publicApp").classList.add("hidden");
         document.getElementById("adminApp").classList.remove("hidden");
-        openAdminPage("dashboard"); // This opens the admin area
+        openAdminPage("dashboard");
     } else {
         alert("Invalid login.");
     }
@@ -365,7 +456,6 @@ let inventory=load(STORAGE.inventory,[
 
         if (materials && Object.keys(materials).length > 0) {
             card.classList.remove("hidden");
-            // CLONE the BOM materials into our temporary variable
             temporaryWalkinAdjustments = JSON.parse(JSON.stringify(materials));
             renderWalkinAdjustmentList();
         } else {
@@ -381,7 +471,6 @@ let inventory=load(STORAGE.inventory,[
 
         let allStockOk = true;
 
-        // Use temporaryWalkinAdjustments to draw the UI
         list.innerHTML = Object.entries(temporaryWalkinAdjustments).map(([name, qty]) => {
             const invItem = inventory.find(i => i.name === name);
             const currentStock = invItem ? invItem.stock : 0;
@@ -416,16 +505,12 @@ let inventory=load(STORAGE.inventory,[
 
 
     function changeWalkinQty(name, delta) {
-        // 1. Get current value from temporary storage
         const current = temporaryWalkinAdjustments[name] || 0;
-        
-        // 2. Calculate new value (prevent going below zero)
+
         const newVal = Math.max(0, current + delta);
-        
-        // 3. Update the temporary storage object
+
         temporaryWalkinAdjustments[name] = newVal;
-        
-        // 4. IMPORTANT: Re-run the render function to update the "x1" to "x2" etc.
+
         renderWalkinAdjustmentList();
     }
 //<---FIXED ADMIN APPOINTMENT SUBMIT --->
@@ -434,20 +519,18 @@ if (adminForm) {
     adminForm.addEventListener("submit", function(e) {
         e.preventDefault();
 
-        // Get values from the Admin form IDs
-        const date = document.getElementById("adminAppointmentDate").value;
-        const time = document.getElementById("adminAppointmentTime").value;
+        const dateEl = document.getElementById("adminAppointmentDate");
+        const timeEl = document.getElementById("adminAppointmentTime");
+        const date = dateEl.value;
+        const time = timeEl.value;
         const patientId = document.getElementById("adminAppointmentPatient").value;
         const service = document.getElementById("adminAppointmentService").value;
 
-        // 1. Validate
-        if (!validateClinicSchedule(date, time)) return; 
+        if (!validateClinicSchedule(date, time, dateEl, timeEl)) return;
 
-        // 2. Find Patient
         const patient = patients.find(p => p.id === patientId);
         if (!patient) { alert("Please select a patient."); return; }
 
-        // 3. Create Appointment Object
         const appointment = {
             id: nextId("APT", appointments),
             patientId: patient.id,
@@ -470,7 +553,6 @@ if (adminForm) {
 }
 
 /* ================= EDIT APPOINTMENT (DATE/TIME) ================= */
-
 function openEditAppointmentModal(id) {
     const a = appointments.find(x => x.id === id);
     if (!a) return;
@@ -491,16 +573,16 @@ if (editAppointmentForm) {
     editAppointmentForm.addEventListener("submit", function (e) {
         e.preventDefault();
         const id = document.getElementById("editAppointmentId").value;
-        const newDate = document.getElementById("editAppointmentDate").value;
-        const newTime = document.getElementById("editAppointmentTime").value;
+        const dateEl = document.getElementById("editAppointmentDate");
+        const timeEl = document.getElementById("editAppointmentTime");
+        const newDate = dateEl.value;
+        const newTime = timeEl.value;
 
-        if (!validateClinicSchedule(newDate, newTime)) return;
+        if (!validateClinicSchedule(newDate, newTime, dateEl, timeEl)) return;
 
         const a = appointments.find(x => x.id === id);
         if (!a) return;
 
-        // Flag the appointment as rescheduled if the date or time actually changed,
-        // so the patient sees a notice next time they check their status.
         if (a.date !== newDate || a.time !== newTime) {
             a.rescheduled = true;
         }
@@ -525,33 +607,28 @@ document.getElementById("patientForm").addEventListener("submit", e => {
     
     const name = document.getElementById("patientName").value.trim();
     if (!name) { alert("Please enter the patient's name."); return; }
-    
-    // 1. Exact Duplicate Check
+
     const duplicate = patients.some(p => p.name.toLowerCase() === name.toLowerCase());
     if (duplicate) { 
         alert("This patient is already registered."); 
         return; 
     }
 
-    // 2. Create Patient Object
     const patient = {
         id: nextId("P", patients),
         name: name,
         contact: document.getElementById("patientContact").value.trim(),
-        dob: document.getElementById("patientDOB").value,
+        dob: document.getElementById("patientDate of birth").value,
         gender: document.getElementById("patientGender").value,
         address: document.getElementById("patientAddress").value.trim(),
         status: "Active"
     };
 
-    // 3. Save to Data
     patients.push(patient);
     save(STORAGE.patients, patients);
     
-    // 4. Close the modal FIRST
     closeAddPatientModal(); 
-    
-    // 5. Refresh the UI
+
     renderAll();
     
     alert(`${patient.name} was successfully registered.`);
@@ -565,6 +642,7 @@ document.getElementById("patientForm").addEventListener("submit", e => {
                     <div><strong>Patient ID</strong>${esc(p.id)}</div>
                     <div><strong>Full Name</strong>${esc(p.name)}</div>
                     <div><strong>Contact</strong>${esc(p.contact)}</div>
+                    <div><strong>Email Address</strong>${esc(p.email||"-")}</div>
                     <div><strong>Date of Birth</strong>${formatDate(p.dob)}</div>
                     <div><strong>Gender</strong>${esc(p.gender||"-")}</div>
                     <div><strong>Address</strong>${esc(p.address||"-")}</div>
@@ -587,9 +665,8 @@ document.getElementById("patientForm").addEventListener("submit", e => {
 
     function renderPatients() {
         const table = document.getElementById("patientTable");
-        if (!table) return; // Prevents errors if this page isn't active
+        if (!table) return;
 
-        // Safely get the search value from the new search bar
         const searchInput = document.getElementById("patientSearch");
         const filter = searchInput ? searchInput.value.toLowerCase() : "";
 
@@ -598,26 +675,31 @@ document.getElementById("patientForm").addEventListener("submit", e => {
             return; 
         }
 
-        // Filter patients based on Name or ID
         const filtered = patients.filter(p => 
             p.name.toLowerCase().includes(filter) || 
             p.id.toLowerCase().includes(filter)
         );
 
-        // If search results are empty
         if (filtered.length === 0 && filter !== "") {
             table.innerHTML = `<tr><td colspan="7" style="text-align:center; padding:30px; color:#888;">No results found for "${esc(filter)}"</td></tr>`;
             return;
         }
 
-        // Render the (filtered) rows
-        table.innerHTML = filtered.map(p => `
+        table.innerHTML = filtered.map(p => {
+            const concern = p.concern || "-";
+            const isLong = concern.length > 40;
+            const shortConcern = isLong ? concern.slice(0, 40).trim() + "…" : concern;
+
+            return `
             <tr>
                 <td>${p.id}</td>
                 <td><strong>${esc(p.name)}</strong></td>
                 <td>${esc(p.contact)}</td>
                 <td>${formatDate(p.dob)}</td>
-                <td>${esc(p.concern || "-")}</td>
+                <td class="concern-cell">
+                    <span class="concern-text" title="${esc(concern)}">${esc(shortConcern)}</span>
+                    ${isLong ? `<button type="button" class="concern-more" onclick="viewPatient('${p.id}')">See more</button>` : ""}
+                </td>
                 <td><span class="badge approved">${p.status}</span></td>
                 <td>
                     <button class="action-btn primary" onclick="viewPatient('${p.id}')">View</button>
@@ -625,11 +707,11 @@ document.getElementById("patientForm").addEventListener("submit", e => {
                     <button class="action-btn warning" onclick="registerPatientWalkin('${p.id}')">Walk-In</button>
                 </td>
             </tr>
-        `).join("");
+        `;
+        }).join("");
     }
 
         /* ================= APPOINTMENTS ================= */
-
         function renderAppointmentPatients(){
             const select=document.getElementById("adminAppointmentPatient");
             if(!select)return;
@@ -639,10 +721,8 @@ document.getElementById("patientForm").addEventListener("submit", e => {
         }
 
         function createAppointmentFor(id) {
-        // 1. Open the modal first (this populates the dropdown list)
         openAppointmentModal();
 
-        // 2. Automatically select the specific patient in the dropdown
         const patientDropdown = document.getElementById("adminAppointmentPatient");
         if (patientDropdown) {
             patientDropdown.value = id;
@@ -650,7 +730,7 @@ document.getElementById("patientForm").addEventListener("submit", e => {
     }
     // --- POPUP LOGIC ---
     function openAppointmentModal() {
-        renderAppointmentPatients(); // Populates dropdown
+        renderAppointmentPatients();
         document.getElementById("adminAppointmentDate").value = today();
         document.getElementById("appointmentModal").classList.remove("hidden");
     }
@@ -662,7 +742,7 @@ document.getElementById("patientForm").addEventListener("submit", e => {
         temporaryMaterialAdjustments = {};
     }
 
-// --- SAFE RENDER FOR APPOINTMENTS (WITH SEARCH) ---
+// ---RENDER FOR APPOINTMENTS---
 function renderAppointments() {
     const table = document.getElementById("appointmentTable");
     if (!table) return;
@@ -677,8 +757,10 @@ function renderAppointments() {
 
     const filtered = appointments.filter(a => {
         const matchesSearch = a.patientName.toLowerCase().includes(filter) || 
-                               a.id.toLowerCase().includes(filter);
+                            a.id.toLowerCase().includes(filter);
         if (!matchesSearch) return false;
+
+        if (a.date < today()) return false;
 
         if (a.status === "Completed" || a.status === "No-show") {
             return a.date === today();
@@ -691,6 +773,10 @@ function renderAppointments() {
         const statusPriority = { "Pending": 0, "Approved": 1, "Completed": 2, "No-show": 2 };
 
         const sorted = [...filtered].sort((a, b) => {
+            const aIsFuture = a.date > today() ? 1 : 0;
+            const bIsFuture = b.date > today() ? 1 : 0;
+            if (aIsFuture !== bIsFuture) return aIsFuture - bIsFuture;
+
             const rankA = statusPriority[a.status] ?? 3;
             const rankB = statusPriority[b.status] ?? 3;
             if (rankA !== rankB) return rankA - rankB;
@@ -700,20 +786,32 @@ function renderAppointments() {
             return keyA.localeCompare(keyB);
         });
 
-    table.innerHTML = sorted.map(a => `
+    const dailyCounters = {};
+    table.innerHTML = sorted.map(a => {
+        const dayKey = a.date; // "YYYY-MM-DD"
+        dailyCounters[dayKey] = (dailyCounters[dayKey] || 0) + 1;
+        const displayNo = "APT" + String(dailyCounters[dayKey]).padStart(3, "0");
+        return `
         <tr>
-            <td>${a.id}</td>
+            <td>${displayNo}</td>
             <td><strong>${esc(a.patientName)}</strong></td>
             <td>${formatDate(a.date)}</td>
             <td>${formatTime(a.time)}</td>
             <td>${esc(a.service)}</td>
             <td><span class="badge ${statusClass(a.status)}">${a.status}</span></td>
             <td>
-                ${a.status === "Pending" ? `<button class="action-btn success" onclick="approveAppointment('${a.id}')">Approve</button><button class="action-btn warning" onclick="openEditAppointmentModal('${a.id}')">Edit</button>` : ""}
+${a.status === "Pending" ? `
+    ${a.date <= today()
+        ? `<button class="action-btn success" onclick="approveAppointment('${a.id}')">Approve</button>`
+        : `<span style="font-size:.75rem;color:#9aa0a6;">Approvable on ${formatDate(a.date)}</span>`
+    }
+    <button class="action-btn warning" onclick="openEditAppointmentModal('${a.id}')">Edit</button>
+` : ""}
                 ${a.status === "Approved" ? `<button class="action-btn primary" onclick="openAdminPage('appointmentQueue')">Queue</button>` : ""}
             </td>
         </tr>
-    `).join("");
+    `;
+    }).join("");
 }
 
 // --- FIXED PUBLIC BOOKING LISTENER ---
@@ -722,26 +820,38 @@ if (publicForm) {
     publicForm.addEventListener("submit", function(e) {
         e.preventDefault();
 
-        const date = document.getElementById("bookingDate").value;
-        const time = document.getElementById("bookingTime").value;
+        const dateEl = document.getElementById("bookingDate");
+        const timeEl = document.getElementById("bookingTime");
+        const date = dateEl.value;
+        const time = timeEl.value;
         const name = document.getElementById("bookingName").value.trim();
         const contact = document.getElementById("bookingContact").value.trim();
+        const email = document.getElementById("bookingEmail") ? document.getElementById("bookingEmail").value.trim() : "";
+        const address = document.getElementById("bookingAddress") ? document.getElementById("bookingAddress").value.trim() : "";
+        const dob = document.getElementById("bookingDOB") ? document.getElementById("bookingDOB").value : "";
         const service = document.getElementById("bookingService").value;
         const concern = document.getElementById("bookingConcern").value.trim();
 
-        // 1. Validate
-        if (!validateClinicSchedule(date, time)) return; 
+        //1. Validate Clinic Schedule
+        if (!validateClinicSchedule(date, time, dateEl, timeEl)) return; 
 
         // 2. Patient Logic
         let patient = patients.find(p => p.name.toLowerCase() === name.toLowerCase());
         if (!patient) {
             patient = { 
                 id: nextId("P", patients), 
-                name, contact, dob: "", address: "", gender: "", emergency: "", concern, status: "Active" 
+                name, contact, email, dob, address, gender: "", emergency: "", concern, status: "Active" 
             };
             patients.push(patient);
-            save(STORAGE.patients, patients);
+        } else {
+            // Fill in any missing contact details for a returning patient,
+            // without overwriting information that's already on file.
+            if (contact && !patient.contact) patient.contact = contact;
+            if (email && !patient.email) patient.email = email;
+            if (address && !patient.address) patient.address = address;
+            if (dob && !patient.dob) patient.dob = dob;
         }
+        save(STORAGE.patients, patients);
 
         // 3. Create Appointment
         const appointment = { 
@@ -780,34 +890,142 @@ if (publicForm) {
             save(STORAGE.appointmentQueue,appointmentQueue);
         }
 
-        function approveAppointment(id) {
-        const a = appointments.find(x => x.id === id);
-        if (!a) return;
+        /* ================= APPROVE APPOINTMENT (WITH PATIENT DETAILS PREVIEW) ================= */
 
-        // 1. Ask for confirmation
-        const confirmMessage = `Are you sure you want to approve the appointment for ${a.patientName} on ${formatDate(a.date)} at ${formatTime(a.time)}?`;
-        
-        if (!confirm(confirmMessage)) {
-            return; // Stop if Cancel is clicked
+        function approveAppointment(id) {
+            openApproveDetailsModal(id);
         }
 
-        // 2. Process the approval
-        a.status = "Approved";
-        a.queueStatus = "Waiting";
-        syncAppointmentQueue();
-        save(STORAGE.appointments, appointments);
-        renderAll();
-    }
+        function openApproveDetailsModal(id) {
+            const a = appointments.find(x => x.id === id);
+            if (!a) return;
+            const p = patients.find(x => x.id === a.patientId);
 
+            pendingApprovalId = id;
+
+            const materials = (a.customMaterials && Object.keys(a.customMaterials).length)
+                ? a.customMaterials
+                : (BOM[a.service] || {});
+            temporaryApprovalAdjustments = { ...materials };
+
+            document.getElementById("approveDetailsContent").innerHTML = `
+                <div><strong>Patient Name</strong>${esc(a.patientName)}</div>
+                <div><strong>Contact Number</strong>${esc(p && p.contact ? p.contact : "-")}</div>
+                <div><strong>Email Address</strong>${esc(p && p.email ? p.email : "-")}</div>
+                <div><strong>Address</strong>${esc(p && p.address ? p.address : "-")}</div>
+                <div><strong>Date</strong>${formatDate(a.date)}</div>
+                <div><strong>Time</strong>${formatTime(a.time)}</div>
+                <div><strong>Dental Service</strong>${esc(a.service)}</div>
+                <div><strong>Dental Concern</strong>${esc(a.concern || (p ? p.concern : "") || "-")}</div>
+            `;
+
+            if (Object.keys(temporaryApprovalAdjustments).length) {
+                const insightWrap = document.createElement("div");
+                insightWrap.style.gridColumn = "1 / -1";
+                insightWrap.className = "insight-card";
+                insightWrap.innerHTML = `
+                    <div class="insight-header">
+                        <div class="insight-title">
+                            <i class="fa-solid fa-microchip"></i>
+                            <span>Clinical Supply Insight</span>
+                        </div>
+                        <div class="insight-badge" id="approvalStockStatusBadge">Checking Stock...</div>
+                    </div>
+                    <div class="insight-content">
+                        <div id="approvalPredictionList" class="prediction-list"></div>
+                    </div>
+                `;
+                document.getElementById("approveDetailsContent").appendChild(insightWrap);
+                renderApprovalAdjustmentList();
+            }
+
+            document.getElementById("approveDetailsModal").classList.remove("hidden");
+                function renderApprovalAdjustmentList() {
+            const list = document.getElementById("approvalPredictionList");
+            const badge = document.getElementById("approvalStockStatusBadge");
+            if (!list) return;
+
+            let allStockOk = true;
+
+            list.innerHTML = Object.entries(temporaryApprovalAdjustments).map(([name, qty]) => {
+                const invItem = inventory.find(i => i.name === name);
+                const currentStock = invItem ? invItem.stock : 0;
+                const isLow = currentStock < qty;
+                if (isLow) allStockOk = false;
+
+                return `
+                    <div class="prediction-item-pro">
+                        <div>
+                            <span class="item-name">${name}</span>
+                            ${isLow ? `<span class="stock-warning"><i class="fa-solid fa-triangle-exclamation"></i> Low Stock: ${currentStock}</span>` : ''}
+                        </div>
+                        <div style="display:flex; align-items:center; gap:8px; background:white; padding:4px; border-radius:6px; border:1px solid #e2e8f0;">
+                            <button type="button" class="action-btn danger" style="padding:2px 8px; margin:0;" onclick="changeApprovalQty('${name}', -1)">-</button>
+                            <span class="item-qty">x${qty}</span>
+                            <button type="button" class="action-btn success" style="padding:2px 8px; margin:0;" onclick="changeApprovalQty('${name}', 1)">+</button>
+                        </div>
+                    </div>
+                `;
+            }).join("");
+
+            if (badge) {
+                badge.textContent = allStockOk ? "Stock Verified" : "Shortage Detected";
+                badge.style.background = allStockOk ? "#dcfce7" : "#fee2e2";
+                badge.style.color = allStockOk ? "#166534" : "#991b1b";
+            }
+        }
+
+        function changeApprovalQty(name, delta) {
+            const current = temporaryApprovalAdjustments[name] || 0;
+            const newVal = Math.max(0, current + delta);
+            temporaryApprovalAdjustments[name] = newVal;
+            renderApprovalAdjustmentList();
+        }
+        }
+        function closeApproveDetailsModal() {
+            document.getElementById("approveDetailsModal").classList.add("hidden");
+            pendingApprovalId = null;
+            temporaryApprovalAdjustments = {};
+        }
+        function confirmApproveAppointment() {
+            const id = pendingApprovalId;
+            if (!id) { closeApproveDetailsModal(); return; }
+
+            const a = appointments.find(x => x.id === id);
+            if (!a) { closeApproveDetailsModal(); return; }
+
+            if (a.date > today()) {
+                alert(`This appointment is scheduled for ${formatDate(a.date)} and can only be approved on that date.`);
+                closeApproveDetailsModal();
+                return;
+            }
+
+            if (Object.keys(temporaryApprovalAdjustments).length) {
+                a.customMaterials = { ...temporaryApprovalAdjustments };
+            }
+
+            a.status = "Approved";
+            a.queueStatus = "Waiting";
+            syncAppointmentQueue();
+            save(STORAGE.appointments, appointments);
+
+            closeApproveDetailsModal();
+            renderAll();
+        }
         function renderAppointmentQueue(){
             const container=document.getElementById("appointmentQueueContainer");
             if(!container)return;
             syncAppointmentQueue();
             const queues=appointmentQueue.filter(q=> q.status==="Waiting"|| q.status==="Serving" );
             if(!queues.length){ container.innerHTML=`<div class="empty-state"><i class="fa-solid fa-calendar-check"></i><strong>No appointment patients waiting.</strong><p>Approved appointments will appear here automatically.</p></div>`; return; }
-            container.innerHTML=queues.map(q=>`
+            const dailyCounters={};
+            container.innerHTML=queues.map(q=>{
+                const dayKey=q.date;
+                dailyCounters[dayKey]=(dailyCounters[dayKey]||0)+1;
+                const displayNo="A"+String(dailyCounters[dayKey]).padStart(3,"0");
+                return `
                 <div class="queue-card">
-                    <div class="queue-number">${q.number}</div>
+                    <div class="queue-number">${displayNo}</div>
                     <div class="queue-details">
                         <h3>${esc(q.patientName)}</h3>
                         <p>${esc(q.service)} · ${formatTime(q.time)}</p>
@@ -818,7 +1036,8 @@ if (publicForm) {
                         ${q.status==="Serving"?`<button class="action-btn success" onclick="completeAppointment('${q.number}')">Complete</button>`:""}
                     </div>
                 </div>
-            `).join("");
+            `;
+            }).join("");
         }
 
         function serveAppointment(number){
@@ -826,6 +1045,12 @@ if (publicForm) {
             if(active){ alert(`${active.number} is currently being served.`); return; }
             const q=appointmentQueue.find(x=>x.number===number);
             if(!q)return;
+
+            if (q.date > today()) {
+                alert("This appointment is scheduled for a future date and cannot be served yet.");
+                return;
+            }
+
             q.status="Serving";
             const a=appointments.find(x=>x.id===q.appointmentId);
             if(a)a.queueStatus="Serving";
@@ -837,17 +1062,23 @@ if (publicForm) {
         function completeAppointment(number){
             const q=appointmentQueue.find(x=>x.number===number);
             if(!q)return;
+
+            if (q.date > today()) {
+                alert("This appointment is scheduled for a future date and cannot be completed yet.");
+                return;
+            }
+
             q.status="Completed";
             const a=appointments.find(x=>x.id===q.appointmentId);
             if(a){ a.queueStatus="Completed"; a.status="Completed"; }
-
-            // Deduction of specific custom materials saved with this appointment
             consumeInventory(q.service, q.appointmentId);
 
             save(STORAGE.appointmentQueue,appointmentQueue);
             save(STORAGE.appointments,appointments);
             renderAll();
         }
+
+        /* ================= PUBLIC NAVIGATION ================= */
 
         function noShowAppointment(number){
             const q=appointmentQueue.find(x=>x.number===number);
@@ -1134,32 +1365,46 @@ function suggestRestock(name,stock,lead){
             syncAppointmentQueue();
             const a = appointmentQueue.filter(q => q.status === "Waiting" || q.status === "Serving");
             const w = walkins.filter(q => q.status === "Waiting" || q.status === "Serving");
-            aBox.innerHTML=a.length?a.map(q=>`<div class="queue-card"><div class="queue-number">${q.number}</div><div class="queue-details"><h3>${esc(q.patientName)}</h3><p>${esc(q.service)}</p><span class="badge ${statusClass(q.status)}">${q.status}</span></div></div>`).join(""):`<div class="empty-state">No appointment patients waiting.</div>`;
+            const dailyCounters={};
+            aBox.innerHTML=a.length?a.map(q=>{
+                const dayKey=q.date;
+                dailyCounters[dayKey]=(dailyCounters[dayKey]||0)+1;
+                const displayNo="A"+String(dailyCounters[dayKey]).padStart(3,"0");
+                return `<div class="queue-card"><div class="queue-number">${displayNo}</div><div class="queue-details"><h3>${esc(q.patientName)}</h3><p>${esc(q.service)}</p><span class="badge ${statusClass(q.status)}">${q.status}</span></div></div>`;
+            }).join(""):`<div class="empty-state">No appointment patients waiting.</div>`;
             wBox.innerHTML=w.length?w.map(q=>`<div class="queue-card"><div class="queue-number">${q.number}</div><div class="queue-details"><h3>${esc(q.patientName)}</h3><p>${esc(q.service)}</p><span class="badge ${statusClass(q.status)}">${q.status}</span></div></div>`).join(""):`<div class="empty-state">No walk-in patients waiting.</div>`;
         }
-
   /* ================= THE FINAL DATE/TIME VALIDATOR ================= */
-const validateClinicSchedule = (dateStr, timeStr) => {
+const validateClinicSchedule = (dateStr, timeStr, dateInput, timeInput) => {
+    // Clear any previous custom error before re-checking
+    if (dateInput) dateInput.setCustomValidity("");
+    if (timeInput) timeInput.setCustomValidity("");
+
     const now = new Date();
-    
-    // Parse input date (YYYY-MM-DD) and time (HH:mm)
+
     const [year, month, day] = dateStr.split('-').map(Number);
     const [hour, minute] = timeStr.split(':').map(Number);
-    
+
     const selectedDate = new Date(year, month - 1, day, hour, minute);
     const todayAtMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     const selectedAtMidnight = new Date(year, month - 1, day);
 
     // 1. DATE CHECK: Is it yesterday or older?
     if (selectedAtMidnight < todayAtMidnight) {
-        alert("DATE ERROR: The date you selected has already passed.");
+        if (dateInput) {
+            dateInput.setCustomValidity("Please choose today's date or a later one — the date you selected has already passed.");
+            dateInput.reportValidity();
+        }
         return false;
     }
 
     // 2. TIME CHECK: ONLY if the date is TODAY, check if the time passed
     if (selectedAtMidnight.getTime() === todayAtMidnight.getTime()) {
         if (selectedDate <= now) {
-            alert("TIME ERROR: This time has already passed for today.");
+            if (timeInput) {
+                timeInput.setCustomValidity("That time has already passed for today. Please choose a later time.");
+                timeInput.reportValidity();
+            }
             return false;
         }
     }
@@ -1167,15 +1412,21 @@ const validateClinicSchedule = (dateStr, timeStr) => {
     // 3. CLINIC HOURS (7AM - 8PM) & LUNCH (12PM - 1PM)
     const totalMinutes = hour * 60 + minute;
     if (totalMinutes < 420 || totalMinutes >= 1200) {
-        alert("HOURS ERROR: Clinic is open from 7:00 AM to 8:00 PM.");
+        if (timeInput) {
+            timeInput.setCustomValidity("Please choose a time between 7:00 AM and 8:00 PM — that's when the clinic is open.");
+            timeInput.reportValidity();
+        }
         return false;
     }
     if (totalMinutes >= 720 && totalMinutes < 780) {
-        alert("LUNCH BREAK: Clinic is closed for lunch (12:00 PM - 1:00 PM).");
+        if (timeInput) {
+            timeInput.setCustomValidity("The clinic is closed for lunch break from 12:00 PM to 1:00 PM. Please choose another time.");
+            timeInput.reportValidity();
+        }
         return false;
     }
 
-    return true; // Passed! No error message sent for Tomorrow/Future dates.
+    return true;
 };
         /* ================= DASHBOARD ================= */
 
@@ -1313,25 +1564,41 @@ const validateClinicSchedule = (dateStr, timeStr) => {
         const tableTitle = document.getElementById("reportTableTitle");
         const tableHeader = document.getElementById("reportTableHeader");
         const tableBody = document.getElementById("reportActivityTable");
+        if (filter === "patients") {
+            // --- FULL PATIENT DIRECTORY (ALL GENDERS) ---
+            tableTitle.textContent = "Full Patient Directory";
+            tableHeader.innerHTML = `<tr><th>ID</th><th>Patient Name</th><th>Contact</th><th>Date of birth</th><th>Gender</th><th>Address</th></tr>`;
 
-        if (filter === "male" || filter === "female" || filter === "other") {
+            const list = [...patients].sort((a, b) => a.id.localeCompare(b.id, undefined, { numeric: true }));
+
+            tableBody.innerHTML = list.length ? list.map(p => `
+                <tr>
+                    <td>${p.id}</td>
+                    <td><strong>${esc(p.name)}</strong></td>
+                    <td>${esc(p.contact)}</td>
+                    <td>${formatDate(p.dob)}</td>
+                    <td>${esc(p.gender || "Other")}</td>
+                    <td>${esc(p.address || "-")}</td>
+                </tr>
+            `).join("") : `<tr><td colspan="6">No patients found.</td></tr>`;
+
+        } else if (filter === "male" || filter === "female" || filter === "other") {
+
+        
             // --- PATIENT GENDER FILTER ---
             const genderMap = { male: "Male", female: "Female", other: "Other" };
             const gender = genderMap[filter];
             tableTitle.textContent = `${gender} Patient Directory`;
-            tableHeader.innerHTML = `<tr><th>ID</th><th>Patient Name</th><th>Contact</th><th>DOB</th><th>Gender</th></tr>`;
+            tableHeader.innerHTML = `<tr><th>No.</th><th>Patient Name</th><th>Contact</th><th>Date of Birth</th><th>Gender</th></tr>`;
 
-            // Sorted by Patient ID, lowest to highest, so the directory reads in a
-            // predictable order regardless of the order patients were registered in.
-            // "Other" also captures blank/unspecified gender values so no patient is left out.
             const list = patients.filter(p => {
                 if (gender === "Other") return p.gender === "Other" || !p.gender;
                 return p.gender === gender;
             }).sort((a, b) => a.id.localeCompare(b.id, undefined, { numeric: true }));
 
-            tableBody.innerHTML = list.length ? list.map(p => `
+            tableBody.innerHTML = list.length ? list.map((p, idx) => `
                 <tr>
-                    <td>${p.id}</td>
+                    <td>${idx + 1}</td>
                     <td><strong>${esc(p.name)}</strong></td>
                     <td>${esc(p.contact)}</td>
                     <td>${formatDate(p.dob)}</td>
@@ -1550,6 +1817,7 @@ function printFilteredReport() {
         /* ================= MASTER RENDER ================= */
 
 function renderAll(){
+    autoFinalizePastEntries();
     syncAppointmentQueue();
     renderDashboard();
     renderPatients();
@@ -1580,12 +1848,20 @@ document.addEventListener("DOMContentLoaded", () => {
     // This physically prevents picking past dates in the browser's date picker
     const todayISO = new Date().toISOString().split('T')[0];
     if (document.getElementById("bookingDate")) document.getElementById("bookingDate").min = todayISO;
+    if (document.getElementById("bookingDOB")) document.getElementById("bookingDOB").max = todayISO;
     if (document.getElementById("adminAppointmentDate")) document.getElementById("adminAppointmentDate").min = todayISO;
 
-    // Restore admin view on refresh if still logged in
-    // (Splash-screen visuals are handled exclusively by handleInitialSplashState()
-    // further below — this used to also toggle the splash here, which raced against
-    // that handler's own timers and caused glitches when reloading the admin panel.)
+        // Clear custom validity bubbles as soon as the user edits the field again
+    ["bookingDate","bookingTime","adminAppointmentDate","adminAppointmentTime","editAppointmentDate","editAppointmentTime"]
+        .forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.addEventListener("input", () => el.setCustomValidity(""));
+        });
+    // Friendlier custom validity messages on every clinic-hours time field
+    attachTimeFieldMessage("bookingTime");
+    attachTimeFieldMessage("adminAppointmentTime");
+    attachTimeFieldMessage("editAppointmentTime");
+
     if(sessionStorage.getItem("pecana_admin_logged_in") === "true"){
         document.getElementById("loginPage").classList.add("hidden");
         document.getElementById("publicApp").classList.add("hidden");
