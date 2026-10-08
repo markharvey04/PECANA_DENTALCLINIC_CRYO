@@ -11,7 +11,7 @@ const STORAGE={
         let serviceChartInstance = null;
         let inventoryChartInstance = null;
         let temporaryMaterialAdjustments = {}; // Holds +/- changes before saving
-        let temporaryWalkinAdjustments = {}; // Tracking +/- for current walk-in modal
+        let temporaryWalkinAdjustments = {};// Tracking +/- for current walk-in modal
 
         const load=(key,fallback=[])=>{
             try{
